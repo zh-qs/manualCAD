@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{20d1378f-af87-450b-825c-d6f421e3b1a3}</ProjectGuid>
+    <RootNamespace>MKMGZad1</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>E:\pw_archiwum\sem8\vcpkg\packages\egl-registry_x64-windows\include;E:\pw_archiwum\sem8\vcpkg\packages\glad_x64-windows\include;E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\pw_archiwum\sem8\vcpkg\packages\glad_x64-windows\lib;E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\lib;$(LibraryPath)</LibraryPath>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>E:\pw_archiwum\sem8\vcpkg\packages\egl-registry_x64-windows\include;E:\pw_archiwum\sem8\vcpkg\packages\glad_x64-windows\include;E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\pw_archiwum\sem8\vcpkg\packages\glad_x64-windows\lib;E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\lib;$(LibraryPath)</LibraryPath>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>E:\pw_archiwum\sem8\vcpkg\packages\egl-registry_x64-windows\include;E:\pw_archiwum\sem8\vcpkg\packages\glad_x64-windows\include;E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\pw_archiwum\sem8\vcpkg\packages\glad_x64-windows\lib;E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\lib;$(LibraryPath)</LibraryPath>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>E:\pw_archiwum\sem8\vcpkg\packages\egl-registry_x64-windows\include;E:\pw_archiwum\sem8\vcpkg\packages\glad_x64-windows\include;E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\pw_archiwum\sem8\vcpkg\packages\glad_x64-windows\lib;E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\lib;$(LibraryPath)</LibraryPath>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\tinyfiledialogs;..\Scene-Serializer\cpp\Serializer\Serializer;..\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glfw3dll.lib;glad.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\tinyfiledialogs;..\Scene-Serializer\cpp\Serializer\Serializer;..\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;glfw3dll.lib;glad.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\tinyfiledialogs;..\Scene-Serializer\cpp\Serializer\Serializer;..\imgui</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>NotSet</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;glfw3dll.lib;glad.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\tinyfiledialogs;..\Scene-Serializer\cpp\Serializer\Serializer;..\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;glfw3dll.lib;glad.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\imgui\imgui.cpp" />
+    <ClCompile Include="..\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\tinyfiledialogs\tinyfiledialogs.c" />
+    <ClCompile Include="algebra.cpp" />
+    <ClCompile Include="axes_cursor.cpp" />
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="curve_with_polyline.cpp" />
+    <ClCompile Include="glApplication.cpp" />
+    <ClCompile Include="graph.cpp" />
+    <ClCompile Include="line.cpp" />
+    <ClCompile Include="linear_equation_system_4x4.cpp" />
+    <ClCompile Include="logger.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="object.cpp" />
+    <ClCompile Include="object_controller.cpp" />
+    <ClCompile Include="object_settings.cpp" />
+    <ClCompile Include="parameter_space_view_window.cpp" />
+    <ClCompile Include="rational_20_param_surface.cpp" />
+    <ClCompile Include="serializer.cpp" />
+    <ClCompile Include="settings_window.cpp" />
+    <ClCompile Include="simple_rect.cpp" />
+    <ClCompile Include="surface_with_contour.cpp" />
+    <ClCompile Include="point_set.cpp" />
+    <ClCompile Include="raycaster.cpp" />
+    <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="render_step.cpp" />
+    <ClCompile Include="shader.cpp" />
+    <ClCompile Include="textured_wireframe_mesh.cpp" />
+    <ClCompile Include="toggling_texture.cpp" />
+    <ClCompile Include="wireframe_mesh.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="application_settings.h" />
+    <ClInclude Include="axes_cursor.h" />
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="bilinear_form_raycastable.h" />
+    <ClInclude Include="cursor.h" />
+    <ClInclude Include="ellipsoid.h" />
+    <ClInclude Include="graph.h" />
+    <ClInclude Include="line.h" />
+    <ClInclude Include="linear_equation_system_4x4.h" />
+    <ClInclude Include="logger.h" />
+    <ClInclude Include="message_box.h" />
+    <ClInclude Include="exception.h" />
+    <ClInclude Include="frame_buffer.h" />
+    <ClInclude Include="glApplication.h" />
+    <ClInclude Include="algebra.h" />
+    <ClInclude Include="mouse_trackable.h" />
+    <ClInclude Include="curve_with_polyline.h" />
+    <ClInclude Include="object.h" />
+    <ClInclude Include="object_controller.h" />
+    <ClInclude Include="object_settings.h" />
+    <ClInclude Include="parameter_space_view_window.h" />
+    <ClInclude Include="rational_20_param_surface.h" />
+    <ClInclude Include="rectangle.h" />
+    <ClInclude Include="serializer.h" />
+    <ClInclude Include="simple_rect.h" />
+    <ClInclude Include="surface_with_contour.h" />
+    <ClInclude Include="point_set.h" />
+    <ClInclude Include="property_handle.h" />
+    <ClInclude Include="raycaster.h" />
+    <ClInclude Include="renderable.h" />
+    <ClInclude Include="renderer.h" />
+    <ClInclude Include="render_step.h" />
+    <ClInclude Include="settings_window.h" />
+    <ClInclude Include="shader.h" />
+    <ClInclude Include="texture.h" />
+    <ClInclude Include="textured_wireframe_mesh.h" />
+    <ClInclude Include="toggling_texture.h" />
+    <ClInclude Include="transformation.h" />
+    <ClInclude Include="tridiagonal_linear_equation_system.h" />
+    <ClInclude Include="vertex_array.h" />
+    <ClInclude Include="buffer.h" />
+    <ClInclude Include="window.h" />
+    <ClInclude Include="wireframe_mesh.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\bin\glfw3.dll">
+      <DeploymentContent>false</DeploymentContent>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="raycasting_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="raycasting_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="quad_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="cursor_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="cursor_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="2d_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="bezier_curve_geometry_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="de_boor_patch_tess_eval_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="dummy_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="line_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="line_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="patch_remove_diagonal_geometry_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="patch_tess_control_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="bezier_patch_tess_eval_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="point_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="rational_20_param_patch_tess_control_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="rational_20_param_patch_tess_eval_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="simple_rect_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="stereoscopy_quad_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Scene-Serializer\cpp\Serializer\Serializer\Serializer.vcxproj">
+      <Project>{f5ad3677-fd39-41a7-8ef3-5e429d816ce0}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="wrap_around_parameters_geometry_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="line_trim_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="line_tex_vertex_shader.glsl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
