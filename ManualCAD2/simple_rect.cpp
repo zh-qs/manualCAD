@@ -12,7 +12,7 @@ namespace ManualCAD
 		1.0f, 1.0f, 1.0f
 	};
 
-	SimpleRect::SimpleRect() : Renderable() {
+	SimpleRect::SimpleRect() : Drawable() {
 		vbo.bind();
 		vbo.set_static_data(vertices, sizeof(vertices));
 	}

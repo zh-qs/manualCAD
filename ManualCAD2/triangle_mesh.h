@@ -2,11 +2,11 @@
 
 #include <vector>
 #include "algebra.h"
-#include "renderable.h"
+#include "drawable.h"
 
 namespace ManualCAD
 {
-	class TriangleMesh : public Renderable {
+	class TriangleMesh : public Drawable {
 		ElementBuffer ebo;
 		VertexBuffer normal_vbo;
 
@@ -14,7 +14,7 @@ namespace ManualCAD
 
 		static const Matrix4x4 IDENTITY;
 	public:
-		TriangleMesh(const Matrix4x4& model) : Renderable(model), ebo(), normal_vbo() { 
+		TriangleMesh(const Matrix4x4& model) : Drawable(model), ebo(), normal_vbo() { 
 			normal_vbo.init();
 			normal_vbo.bind();
 			glEnableVertexAttribArray(1);
@@ -22,7 +22,7 @@ namespace ManualCAD
 			ebo.init(); 
 			ebo.bind(); 
 		}
-		TriangleMesh() : Renderable(), ebo(), normal_vbo() {
+		TriangleMesh() : Drawable(), ebo(), normal_vbo() {
 			normal_vbo.init();
 			normal_vbo.bind();
 			glEnableVertexAttribArray(1);
@@ -35,7 +35,7 @@ namespace ManualCAD
 		inline size_t get_triangle_count() const { return triangle_count; }
 
 		void render(Renderer& renderer, int width, int height, float thickness = 1.0f) const override;
-		void dispose() override { Renderable::dispose(); normal_vbo.dispose();  ebo.dispose(); }
+		void dispose() override { Drawable::dispose(); normal_vbo.dispose();  ebo.dispose(); }
 
 		void set_data(const std::vector<Vector3>& points, const std::vector<Vector3>& normals, const std::vector<IndexTriple>& triangle_indices);
 		void generate_cylinder(float radius, float height, unsigned int circle_divisions);

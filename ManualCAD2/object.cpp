@@ -56,12 +56,12 @@ namespace ManualCAD
 
 	void Object::update_renderable_matrix()
 	{
-		if (!illusory) renderable.set_model_matrix(transformation.get_matrix());
+		if (!illusory) renderable.set_transformation(transformation);
 	}
 
 	void Object::update_renderable_matrix(const Transformation& combine_transformation, const Vector3& center)
 	{
-		if (!illusory) renderable.set_model_matrix(transformation.get_matrix_combined_with(combine_transformation, center));
+		if (!illusory) renderable.set_combined_transformation(transformation, combine_transformation, center);
 	}
 
 	void Object::build_settings(ObjectSettingsWindow& parent)

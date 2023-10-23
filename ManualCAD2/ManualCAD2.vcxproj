@@ -219,6 +219,7 @@
     <ClInclude Include="graph.h" />
     <ClInclude Include="height_map.h" />
     <ClInclude Include="milling_program.h" />
+    <ClInclude Include="renderable.h" />
     <ClInclude Include="system_dialog.h" />
     <ClInclude Include="task.h" />
     <ClInclude Include="triangle_mesh.h" />
@@ -246,7 +247,7 @@
     <ClInclude Include="point_set.h" />
     <ClInclude Include="property_handle.h" />
     <ClInclude Include="raycaster.h" />
-    <ClInclude Include="renderable.h" />
+    <ClInclude Include="drawable.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="render_step.h" />
     <ClInclude Include="settings_window.h" />

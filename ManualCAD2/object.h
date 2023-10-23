@@ -122,7 +122,7 @@ namespace ManualCAD
 		static Handle<O> create_at_cursor(const Cursor& cursor, Args&&... args) {
 			auto obj = create<O>(std::forward<Args>(args)...);
 			obj->transformation.position = cursor.get_world_position();
-			obj->renderable.set_model_matrix(obj->transformation.get_matrix());
+			obj->renderable.set_transformation(obj->transformation);
 			return obj;
 		}
 
@@ -140,7 +140,7 @@ namespace ManualCAD
 		//std::list<IntersectionCurve*> intersection_curves;
 		TogglingTexture trim_texture;
 
-		ParametricSurface(Renderable& renderable) : Object(renderable), trim_texture(ApplicationSettings::TRIM_TEXTURE_SIZE_PIXELS, ApplicationSettings::TRIM_TEXTURE_SIZE_PIXELS, *this) {}
+		ParametricSurface(Drawable& drawable) : Object(drawable), trim_texture(ApplicationSettings::TRIM_TEXTURE_SIZE_PIXELS, ApplicationSettings::TRIM_TEXTURE_SIZE_PIXELS, *this) {}
 
 		//void add_intersection(IntersectionCurve& curve) { 
 		//	//intersection_curves.push_back(&curve);
@@ -375,6 +375,7 @@ namespace ManualCAD
 		void remove_binding_with(Object& object) override {}
 		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override;
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override;
+		const Drawable& get_const_drawable() const { return set; }
 
 		inline Vector3 get_const_position() const {
 			const auto& m = set.get_model_matrix();

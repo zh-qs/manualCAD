@@ -2,18 +2,18 @@
 
 #include <vector>
 #include "algebra.h"
-#include "renderable.h"
+#include "drawable.h"
 
 namespace ManualCAD
 {
-	class Line : public Renderable {
+	class Line : public Drawable {
 
 		size_t point_count = 0;
 	public:
 		bool looped = false;
 
-		Line(const Matrix4x4& model) : Renderable(model) {}
-		Line() : Renderable() {}
+		Line(const Matrix4x4& model) : Drawable(model) {}
+		Line() : Drawable() {}
 		
 		inline size_t get_point_count() const { return point_count; }
 
@@ -22,14 +22,14 @@ namespace ManualCAD
 		void set_data(const std::vector<Vector3>& points);
 	};
 
-	class Line2D : public Renderable {
+	class Line2D : public Drawable {
 		size_t point_count = 0;
 		Range<float> urange, vrange;
 
 	public:
 		bool looped = false;
 
-		Line2D(const Range<float>& urange, const Range<float>& vrange) : Renderable(2), urange(urange), vrange(vrange) {}
+		Line2D(const Range<float>& urange, const Range<float>& vrange) : Drawable(2), urange(urange), vrange(vrange) {}
 
 		inline size_t get_point_count() const { return point_count; }
 		inline Range<float> get_u_range() const { return urange; }

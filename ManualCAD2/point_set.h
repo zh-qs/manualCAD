@@ -2,16 +2,16 @@
 
 #include <vector>
 #include "algebra.h"
-#include "renderable.h"
+#include "drawable.h"
 
 namespace ManualCAD
 {
-	class PointSet : public Renderable {
+	class PointSet : public Drawable {
 		//std::vector<Vector3> points;
 		size_t point_count = 0;
 	public:
-		PointSet(const Matrix4x4& model) : Renderable(model) {}
-		PointSet() : Renderable() {}
+		PointSet(const Matrix4x4& model) : Drawable(model) {}
+		PointSet() : Drawable() {}
 		/*PointSet(size_t points_count, const Matrix4x4& model) : Renderable(model), points(points_count) {}
 		PointSet() : PointSet(0, Matrix4x4::identity()) {}
 		PointSet(PointSet&& set) noexcept : Renderable(std::move(set)), points(std::move(set.points)) {}

@@ -52,7 +52,7 @@ namespace ManualCAD
 		int i;
 		for (i = 0; i < points.size(); ++i)
 		{
-			const auto& m = points[i]->get_const_renderable().get_model_matrix();
+			const auto& m = points[i]->get_const_drawable().get_model_matrix();
 			res[i] = { m.elem[0][3], m.elem[1][3], m.elem[2][3] };
 		}
 		for (int j = 0; j < mod; ++j)

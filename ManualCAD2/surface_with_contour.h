@@ -2,12 +2,12 @@
 
 #include <vector>
 #include "algebra.h"
-#include "renderable.h"
+#include "drawable.h"
 #include "texture.h"
 
 namespace ManualCAD
 {
-	class SurfaceWithBezierContour : public Renderable {
+	class SurfaceWithBezierContour : public Drawable {
 		//std::vector<Vector3> points;
 		size_t patch_indices_count = 0;
 		size_t contour_indices_count = 0;
@@ -23,8 +23,8 @@ namespace ManualCAD
 		unsigned int divisions_x = 4;
 		unsigned int divisions_y = 4;
 
-		SurfaceWithBezierContour(const Matrix4x4& model, const Texture* texture) : Renderable(model), ebo(), contour_ebo(), texture(texture) { ebo.init(); contour_ebo.init(); contour_ebo.bind(); }
-		SurfaceWithBezierContour(const Texture* texture) : Renderable(), ebo(), contour_ebo(), texture(texture) { ebo.init(); contour_ebo.init(); contour_ebo.bind(); }
+		SurfaceWithBezierContour(const Matrix4x4& model, const Texture* texture) : Drawable(model), ebo(), contour_ebo(), texture(texture) { ebo.init(); contour_ebo.init(); contour_ebo.bind(); }
+		SurfaceWithBezierContour(const Texture* texture) : Drawable(), ebo(), contour_ebo(), texture(texture) { ebo.init(); contour_ebo.init(); contour_ebo.bind(); }
 
 		inline size_t get_patch_indices_count() const { return patch_indices_count; }
 		inline size_t get_contour_indices_count() const { return contour_indices_count; }
@@ -40,10 +40,10 @@ namespace ManualCAD
 		inline void reset_ebos() { ebos_set = false; }
 		void set_data(const std::vector<Vector3>& points, int patches_x, int patches_y);
 		void render(Renderer& renderer, int width, int height, float thickness = 1.0f) const override;
-		void dispose() override { Renderable::dispose(); ebo.dispose(); contour_ebo.dispose(); }
+		void dispose() override { Drawable::dispose(); ebo.dispose(); contour_ebo.dispose(); }
 	};
 
-	class SurfaceWithDeBoorContour : public Renderable {
+	class SurfaceWithDeBoorContour : public Drawable {
 		size_t patch_indices_count = 0;
 		size_t contour_indices_count = 0;
 		int patches_x = 0, patches_y = 0;
@@ -58,8 +58,8 @@ namespace ManualCAD
 		unsigned int divisions_x = 4;
 		unsigned int divisions_y = 4;
 
-		SurfaceWithDeBoorContour(const Matrix4x4& model, const Texture* texture) : Renderable(model), ebo(), contour_ebo(), texture(texture) { ebo.init(); contour_ebo.init(); contour_ebo.bind(); }
-		SurfaceWithDeBoorContour(const Texture* texture) : Renderable(), ebo(), contour_ebo(), texture(texture) { ebo.init(); contour_ebo.init(); contour_ebo.bind(); }
+		SurfaceWithDeBoorContour(const Matrix4x4& model, const Texture* texture) : Drawable(model), ebo(), contour_ebo(), texture(texture) { ebo.init(); contour_ebo.init(); contour_ebo.bind(); }
+		SurfaceWithDeBoorContour(const Texture* texture) : Drawable(), ebo(), contour_ebo(), texture(texture) { ebo.init(); contour_ebo.init(); contour_ebo.bind(); }
 
 		inline size_t get_patch_indices_count() const { return patch_indices_count; }
 		inline size_t get_contour_indices_count() const { return contour_indices_count; }
@@ -75,6 +75,6 @@ namespace ManualCAD
 		inline void reset_ebos() { ebos_set = false; }
 		void set_data(const std::vector<Vector3>& points, int patches_x, int patches_y);
 		void render(Renderer& renderer, int width, int height, float thickness = 1.0f) const override;
-		void dispose() override { Renderable::dispose(); ebo.dispose(); contour_ebo.dispose(); }
+		void dispose() override { Drawable::dispose(); ebo.dispose(); contour_ebo.dispose(); }
 	};
 }

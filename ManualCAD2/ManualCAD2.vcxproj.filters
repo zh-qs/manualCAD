@@ -257,7 +257,7 @@
     <ClInclude Include="mouse_trackable.h">
       <Filter>Pliki źródłowe\gui</Filter>
     </ClInclude>
-    <ClInclude Include="renderable.h">
+    <ClInclude Include="drawable.h">
       <Filter>Pliki źródłowe\drawable</Filter>
     </ClInclude>
     <ClInclude Include="point_set.h">
@@ -352,6 +352,9 @@
     </ClInclude>
     <ClInclude Include="system_dialog.h">
       <Filter>Pliki źródłowe\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="renderable.h">
+      <Filter>Pliki źródłowe\drawable</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

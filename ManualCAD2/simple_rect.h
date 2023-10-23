@@ -1,9 +1,9 @@
 #pragma once
-#include "renderable.h"
+#include "drawable.h"
 
 namespace ManualCAD
 {
-	class SimpleRect : public Renderable {
+	class SimpleRect : public Drawable {
 	public:
 		bool visible = false;
 		Vector4 color = { 1.0f,0.647f,0.1f,1.0f };

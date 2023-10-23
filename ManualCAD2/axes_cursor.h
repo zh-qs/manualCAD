@@ -1,14 +1,14 @@
 #pragma once
 #include "algebra.h"
-#include "renderable.h"
+#include "drawable.h"
 
 namespace ManualCAD
 {
-	class AxesCursor : public Renderable {
+	class AxesCursor : public Drawable {
 		static constexpr unsigned int COORDS_SIZE = 6;
 		Vector3 coords[COORDS_SIZE] = { {1.0f,0.0f,0.0f}, {1.0f,0.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,1.0f,0.0f}, {0.0f,0.0f,1.0f}, {0.0f,0.0f,1.0f} };
 	public:
-		AxesCursor() : Renderable() {
+		AxesCursor() : Drawable() {
 			vbo.bind();
 			vbo.set_static_data(reinterpret_cast<const float*>(coords), sizeof(coords));
 		}

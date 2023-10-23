@@ -2,11 +2,11 @@
 
 #include <vector>
 #include "algebra.h"
-#include "renderable.h"
+#include "drawable.h"
 
 namespace ManualCAD
 {
-	class WireframeMesh : public Renderable {
+	class WireframeMesh : public Drawable {
 		//std::vector<Vector3> points;
 		//std::vector<IndexPair> line_indices;
 		ElementBuffer ebo;
@@ -15,11 +15,11 @@ namespace ManualCAD
 
 		static const Matrix4x4 IDENTITY;
 	public:
-		WireframeMesh(const Matrix4x4& model) : Renderable(model), ebo() { ebo.init(); ebo.bind(); }
-		WireframeMesh() : Renderable(), ebo() { ebo.init(); ebo.bind(); }
-		/*WireframeMesh(size_t points_count, size_t lines_count, const Matrix4x4& model) : Renderable(model), points(points_count), line_indices(lines_count) {}
+		WireframeMesh(const Matrix4x4& model) : Drawable(model), ebo() { ebo.init(); ebo.bind(); }
+		WireframeMesh() : Drawable(), ebo() { ebo.init(); ebo.bind(); }
+		/*WireframeMesh(size_t points_count, size_t lines_count, const Matrix4x4& model) : Drawable(model), points(points_count), line_indices(lines_count) {}
 		WireframeMesh() : WireframeMesh(0, 0, Matrix4x4::identity()) {}
-		WireframeMesh(WireframeMesh&& mesh) noexcept : Renderable(std::move(mesh)), points(std::move(mesh.points)), line_indices(std::move(mesh.line_indices)) {}
+		WireframeMesh(WireframeMesh&& mesh) noexcept : Drawable(std::move(mesh)), points(std::move(mesh.points)), line_indices(std::move(mesh.line_indices)) {}
 		WireframeMesh& operator=(WireframeMesh&& mesh) noexcept {
 			points = std::move(mesh.points);
 			line_indices = std::move(mesh.line_indices);
@@ -39,7 +39,7 @@ namespace ManualCAD
 		inline size_t get_line_count() const { return line_count; }
 
 		void render(Renderer& renderer, int width, int height, float thickness = 1.0f) const override;
-		void dispose() override { Renderable::dispose(); ebo.dispose(); }
+		void dispose() override { Drawable::dispose(); ebo.dispose(); }
 
 		void set_data(const std::vector<Vector3>& points, const std::vector<IndexPair>& line_indices);
 		void generate_torus(float large_radius, float small_radius, unsigned int divisions_x, unsigned int divisions_y);

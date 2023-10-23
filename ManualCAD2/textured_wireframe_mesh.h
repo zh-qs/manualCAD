@@ -2,12 +2,12 @@
 
 #include <vector>
 #include "algebra.h"
-#include "renderable.h"
+#include "drawable.h"
 #include "texture.h"
 
 namespace ManualCAD
 {
-	class TexturedWireframeMesh : public Renderable {
+	class TexturedWireframeMesh : public Drawable {
 		//std::vector<Vector3> points;
 		//std::vector<IndexPair> line_indices;
 		ElementBuffer ebo;
@@ -18,7 +18,7 @@ namespace ManualCAD
 
 		static const Matrix4x4 IDENTITY;
 	public:
-		TexturedWireframeMesh(const Matrix4x4& model, const Texture& texture) : Renderable(model), ebo(), texvbo(), texture(texture) { 
+		TexturedWireframeMesh(const Matrix4x4& model, const Texture& texture) : Drawable(model), ebo(), texvbo(), texture(texture) { 
 			texvbo.init();
 			texvbo.bind();
 			glEnableVertexAttribArray(1);
@@ -34,7 +34,7 @@ namespace ManualCAD
 		inline const Texture& get_texture() const { return texture; }
 
 		void render(Renderer& renderer, int width, int height, float thickness = 1.0f) const override;
-		void dispose() override { Renderable::dispose(); texvbo.dispose(); ebo.dispose(); }
+		void dispose() override { Drawable::dispose(); texvbo.dispose(); ebo.dispose(); }
 
 		void set_data(const std::vector<Vector3>& points, const std::vector<Vector2>& tex_coords, const std::vector<IndexPair>& line_indices);
 		void generate_torus(float large_radius, float small_radius, unsigned int divisions_x, unsigned int divisions_y);
