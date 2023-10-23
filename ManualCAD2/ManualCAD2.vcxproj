@@ -176,12 +176,15 @@
     <ClCompile Include="axes_cursor.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="curve_with_polyline.cpp" />
+    <ClCompile Include="cutter.cpp" />
     <ClCompile Include="glApplication.cpp" />
     <ClCompile Include="graph.cpp" />
+    <ClCompile Include="height_map.cpp" />
     <ClCompile Include="line.cpp" />
     <ClCompile Include="linear_equation_system_4x4.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="milling_program.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="object_controller.cpp" />
     <ClCompile Include="object_settings.cpp" />
@@ -196,9 +199,13 @@
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="render_step.cpp" />
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="system_dialog.cpp" />
     <ClCompile Include="textured_wireframe_mesh.cpp" />
     <ClCompile Include="toggling_texture.cpp" />
+    <ClCompile Include="triangle_mesh.cpp" />
     <ClCompile Include="wireframe_mesh.cpp" />
+    <ClCompile Include="workpiece.cpp" />
+    <ClCompile Include="workpiece_renderable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application_settings.h" />
@@ -206,8 +213,17 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="bilinear_form_raycastable.h" />
     <ClInclude Include="cursor.h" />
+    <ClInclude Include="cutter.h" />
+    <ClInclude Include="cutter_move.h" />
     <ClInclude Include="ellipsoid.h" />
     <ClInclude Include="graph.h" />
+    <ClInclude Include="height_map.h" />
+    <ClInclude Include="milling_program.h" />
+    <ClInclude Include="system_dialog.h" />
+    <ClInclude Include="task.h" />
+    <ClInclude Include="triangle_mesh.h" />
+    <ClInclude Include="thick_line_rasterizer.h" />
+    <ClInclude Include="workpiece_renderable.h" />
     <ClInclude Include="line.h" />
     <ClInclude Include="linear_equation_system_4x4.h" />
     <ClInclude Include="logger.h" />
@@ -244,6 +260,7 @@
     <ClInclude Include="buffer.h" />
     <ClInclude Include="window.h" />
     <ClInclude Include="wireframe_mesh.h" />
+    <ClInclude Include="workpiece.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\bin\glfw3.dll">
@@ -330,7 +347,25 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <None Include="line_tex_vertex_shader.glsl" />
+    <CopyFileToFolders Include="line_tex_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="workpiece_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="workpiece_geometry_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="phong_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="triangle_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

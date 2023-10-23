@@ -45,6 +45,8 @@ namespace ManualCAD
 		rational_20_param_patch_shader.init("dummy_vertex_shader.glsl", "rational_20_param_patch_tess_control_shader.glsl", "rational_20_param_patch_tess_eval_shader.glsl", "patch_remove_diagonal_geometry_shader.glsl", "line_fragment_shader.glsl");
 		simple_shader.init("simple_rect_vertex_shader.glsl", "line_fragment_shader.glsl");
 		two_dim_shader.init("2d_vertex_shader.glsl", "wrap_around_parameters_geometry_shader.glsl", "line_fragment_shader.glsl");
+		workpiece_shader.init("workpiece_vertex_shader.glsl", "workpiece_geometry_shader.glsl", "phong_fragment_shader.glsl");
+		triangle_shader.init("triangle_vertex_shader.glsl", "phong_fragment_shader.glsl");
 
 		ul_pvm_location = line_shader.get_uniform_location("u_pvm");
 		ul_color_location = line_shader.get_uniform_location("u_color");
@@ -91,6 +93,16 @@ namespace ManualCAD
 		u2d_color_location = two_dim_shader.get_uniform_location("u_color");
 		u2d_urange_location = two_dim_shader.get_uniform_location("u_urange");
 		u2d_vrange_location = two_dim_shader.get_uniform_location("u_vrange");
+
+		uw_pv_location = workpiece_shader.get_uniform_location("u_pv");
+		uw_m_location = workpiece_shader.get_uniform_location("u_m");
+		uw_size_location = workpiece_shader.get_uniform_location("u_size");
+		uw_height_map_location = workpiece_shader.get_uniform_location("u_height_map");
+		uw_color_location = workpiece_shader.get_uniform_location("u_color");
+
+		ut_pvm_location = triangle_shader.get_uniform_location("u_pvm");
+		ut_m_location = triangle_shader.get_uniform_location("u_m");
+		ut_color_location = triangle_shader.get_uniform_location("u_color");
 
 		// stuff for stereoscopy
 
@@ -474,6 +486,41 @@ namespace ManualCAD
 
 		glLineWidth(thickness);
 		glDrawArrays(line.looped ? GL_LINE_LOOP : GL_LINE_STRIP, 0, line.get_point_count());
+	}
+
+	void Renderer::render_workpiece_renderable(const WorkpieceRenderable& workpiece_renderable, const Vector4& color, int width, int height, float thickness)
+	{
+		auto pv = camera.get_projection_matrix(width, height) * camera.get_view_matrix();
+
+		workpiece_shader.use();
+		glActiveTexture(GL_TEXTURE0);
+		workpiece_renderable.get_texture().bind();
+		glUniform1i(uw_height_map_location, 0);
+		glUniformMatrix4fv(uw_pv_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(pv).elem);
+		glUniformMatrix4fv(uw_m_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(workpiece_renderable.get_model_matrix()).elem);
+		glUniform3f(uw_size_location, workpiece_renderable.parent_size.x, workpiece_renderable.parent_size.y, workpiece_renderable.parent_size.z);
+		glUniform4f(uw_color_location, color.x, color.y, color.z, color.w);
+
+		//mesh.vao.bind();
+		workpiece_renderable.bind_to_render();
+
+		//glLineWidth(thickness);
+		glDrawElements(GL_TRIANGLES, workpiece_renderable.get_indices_count(), GL_UNSIGNED_INT, NULL);
+	}
+
+	void Renderer::render_triangle_mesh(const TriangleMesh& mesh, const Vector4& color, int width, int height, float thickness)
+	{
+		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * mesh.get_model_matrix();
+
+		triangle_shader.use();
+		glUniformMatrix4fv(ut_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
+		glUniformMatrix4fv(ut_m_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(mesh.get_model_matrix()).elem);
+		glUniform4f(ut_color_location, color.x, color.y, color.z, color.w);
+
+		mesh.bind_to_render();
+
+		glLineWidth(thickness);
+		glDrawElements(GL_TRIANGLES, 3 * mesh.get_triangle_count(), GL_UNSIGNED_INT, NULL);
 	}
 
 	void Renderer::enable_depth_testing()

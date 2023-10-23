@@ -466,6 +466,17 @@ namespace ManualCAD
 		return sqrtf(x * x + y * y);
 	}
 
+	float Vector2::lengthsq() const
+	{
+		return x * x + y * y;
+	}
+
+	Vector2 Vector2::normalize() const
+	{
+		float l = length();
+		return { x / l, y / l };
+	}
+
 	Vector2& Vector2::operator+=(const Vector2& vec)
 	{
 		x += vec.x;
@@ -477,6 +488,13 @@ namespace ManualCAD
 	{
 		x -= vec.x;
 		y -= vec.y;
+		return *this;
+	}
+
+	Vector2& Vector2::operator*=(const float& a)
+	{
+		x *= a;
+		y *= a;
 		return *this;
 	}
 }

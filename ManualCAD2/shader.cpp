@@ -16,7 +16,7 @@ namespace ManualCAD
 
 		// read code
 		if (!ifstr.good()) {
-			throw std::runtime_error("Cannot open shader file");
+			throw std::runtime_error(std::string("Cannot open shader file: ") + filename);
 		}
 
 		std::stringstream sstr;

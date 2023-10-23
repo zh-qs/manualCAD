@@ -1,12 +1,10 @@
 #include "settings_window.h"
 #include "serializer.h"
 #include "logger.h"
-#include <tinyfiledialogs.h>
+#include "system_dialog.h"
 #include <filesystem>
 #include <string>
 #include <Scene/SerializerException.h>
-
-static const char* PATTERN = "*.json";
 
 namespace ManualCAD
 {
@@ -15,14 +13,14 @@ namespace ManualCAD
 	{
 		if (!check_and_confirm_unsaved())
 			return;
-		char* filename;
+		const char* filename = nullptr;
 		try
 		{
-			filename = tinyfd_openFileDialog("Open", "", 1, &PATTERN, "", 0);
+			filename = SystemDialog::open_file_dialog("Open", { {"*.json", "JSON file"} }, false);
 		}
 		catch (const std::exception& e)
 		{
-			Logger::log("[ERROR] Opening JSON file: ", e.what());
+			Logger::log_error("[ERROR] Opening JSON file: %s\n", e.what());
 		}
 		if (filename == nullptr)
 			return;
@@ -36,20 +34,21 @@ namespace ManualCAD
 		}
 		catch (MG1::SerializerException& e)
 		{
-			tinyfd_messageBox("Error", e.what(), "ok", "error", 1);
+			Logger::log_error("[ERROR] Error deserializing JSON:\n%s\n", e.what());
+			SystemDialog::message_box("Error", "Error deserializing JSON", SystemDialog::ButtonType::Ok, SystemDialog::MessageBoxType::Error);
 		}
 	}
 
 	void ObjectControllerSettingsWindow::save_model_to_file()
 	{
-		char* filename;
+		const char* filename = nullptr;
 		try
 		{
-			filename = tinyfd_saveFileDialog("Save", "", 1, &PATTERN, "");
+			filename = SystemDialog::save_file_dialog("Save", { { "*.json", "JSON file" } });
 		}
 		catch (const std::exception& e)
 		{
-			Logger::log("[ERROR] Saving JSON file: ", e.what());
+			Logger::log_error("[ERROR] Saving JSON file: %s\n", e.what());
 		}
 		if (filename == nullptr)
 			return;
@@ -63,8 +62,8 @@ namespace ManualCAD
 	{
 		if (controller.is_unsaved())
 		{
-			int result = tinyfd_messageBox("Question", "Model is not saved. Continue?", "yesno", "question", 0);
-			return result == 1;
+			auto result = SystemDialog::message_box("Question", "Model is not saved. Continue?", SystemDialog::ButtonType::YesNo, SystemDialog::MessageBoxType::Question);
+			return result == SystemDialog::Button::YesOk;
 		}
 		return true;
 	}

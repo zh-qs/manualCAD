@@ -7,6 +7,7 @@
 #include "message_box.h"
 #include "rectangle.h"
 #include "parameter_space_view_window.h"
+#include "task.h"
 
 namespace ManualCAD
 {
@@ -25,6 +26,7 @@ namespace ManualCAD
 		bool selected_indices_snapshot_valid = false;
 		std::vector<ObjectHandle> objects;
 		ObjectHandle preview;
+		TaskManager& task_manager;
 		bool preview_present = false;
 		bool unsaved = false;
 
@@ -39,7 +41,7 @@ namespace ManualCAD
 			unset_preview();
 		}
 	public:
-		ObjectController() { }
+		ObjectController(TaskManager& task_manager) : task_manager(task_manager) { }
 
 		bool is_preview_present() const { return preview_present; }
 		bool is_unsaved() const { return unsaved; }
@@ -115,8 +117,8 @@ namespace ManualCAD
 							obj->remove_binding_with(to_delete);
 						}
 
-						it = objects.erase(it);
 						to_delete.on_delete();
+						it = objects.erase(it);
 
 						// usuwanie kolekcji punktów razem z krzyw¹
 						for (int j = 0; j < to_delete.children_count(); ++j)
@@ -140,6 +142,7 @@ namespace ManualCAD
 				++i;
 			}
 			selected_indices.clear();
+			is_collection_valid = false;
 			on_selection_changed();
 		}
 		int get_nearest_object_from_pixels(float x, float y, const Camera& camera, int width, int height);

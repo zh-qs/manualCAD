@@ -33,6 +33,7 @@
 #include "cursor.h"
 #include "settings_window.h"
 #include "parameter_space_view_window.h"
+#include "task.h"
 
 namespace ManualCAD
 {
@@ -58,6 +59,7 @@ namespace ManualCAD
 		//Raycaster& raycaster;
 		Renderer& renderer;
 		ObjectController controller;
+		TaskManager task_manager;
 		std::unique_ptr<Cursor> cursor;
 		int display_w, display_h;
 		

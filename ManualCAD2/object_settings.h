@@ -1,5 +1,6 @@
 #pragma once
 #include "object.h"
+#include "workpiece.h"
 
 namespace ManualCAD
 {
@@ -20,5 +21,6 @@ namespace ManualCAD
 		static void build_gregory_20_param_surface_settings(Gregory20ParamSurface& surf, ObjectSettingsWindow& parent);
 		static void build_intersection_curve_settings(IntersectionCurve& curve, ObjectSettingsWindow& parent);
 		static void build_parametric_surface_settings(ParametricSurface& surf, ObjectSettingsWindow& parent);
+		static void build_workpiece_settings(Workpiece& workpiece, ObjectSettingsWindow& parent);
 	};
 }

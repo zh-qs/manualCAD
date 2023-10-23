@@ -114,7 +114,7 @@ namespace ManualCAD
 	WindowHandle ObjectController::create_settings_window(Camera& camera, const Cursor& cursor, WindowHandle& object_settings_window)
 	{
 		object_settings_window->visible = false;
-		return make_window<ObjectControllerSettingsWindow>(*this, camera, cursor, object_settings_window);
+		return make_window<ObjectControllerSettingsWindow>(*this, camera, cursor, object_settings_window, task_manager);
 	}
 
 	WindowHandle ObjectController::create_current_object_settings_window(ParameterSpaceViewWindow& parameter_view)

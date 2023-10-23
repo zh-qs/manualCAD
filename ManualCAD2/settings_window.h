@@ -5,10 +5,12 @@
 #include "raycaster.h"
 #include "renderer.h"
 #include "object.h"
+#include "workpiece.h"
 #include "object_controller.h"
 #include "cursor.h"
 #include <string>
 #include "message_box.h"
+#include "task.h"
 #include <optional>
 
 namespace ManualCAD
@@ -156,6 +158,7 @@ namespace ManualCAD
 	class ObjectControllerSettingsWindow : public Window {
 		ObjectController& controller;
 		Camera& camera;
+		TaskManager& task_manager;
 		const Cursor& cursor;
 		bool& object_settings_window_visible;
 
@@ -176,7 +179,7 @@ namespace ManualCAD
 		void try_add_self_intersection_curve_with_cursor_hint(ParametricSurface& surf, bool& not_intersect, bool& timeout);
 		void try_add_self_intersection_curve_without_hint(ParametricSurface& surf, bool& not_intersect, bool& timeout);
 	public:
-		ObjectControllerSettingsWindow(ObjectController& controller, Camera& camera, const Cursor& cursor, WindowHandle& object_settings_window) : controller(controller), camera(camera), cursor(cursor), object_settings_window_visible(object_settings_window->visible) {}
+		ObjectControllerSettingsWindow(ObjectController& controller, Camera& camera, const Cursor& cursor, WindowHandle& object_settings_window, TaskManager& task_manager) : controller(controller), camera(camera), cursor(cursor), object_settings_window_visible(object_settings_window->visible), task_manager(task_manager) {}
 
 		virtual void build() override {
 			ImGui::Begin("Objects", NULL, ImGuiWindowFlags_MenuBar);
@@ -240,6 +243,10 @@ namespace ManualCAD
 							should_open_intersection_popup = true;
 							//try_add_intersection_curve(controller, *surfaces.first, *surfaces.second, cursor, not_intersect);
 						}
+					}
+					if (ImGui::MenuItem("Milling workpiece"))
+					{
+						controller.add_object(Object::create<Workpiece>(task_manager));
 					}
 					ImGui::EndMenu();
 				}

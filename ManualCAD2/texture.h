@@ -5,7 +5,8 @@
 
 namespace ManualCAD
 {
-	class Texture {
+	template <GLenum FORMAT, GLenum INTERNALFORMAT = FORMAT>
+	class GlTexture {
 		GLuint id;
 	public:
 		GLuint get_id() const { return id; }
@@ -24,15 +25,19 @@ namespace ManualCAD
 
 		void set_size(int width, int height) {
 			//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
+			glTexImage2D(GL_TEXTURE_2D, 0, INTERNALFORMAT, width, height, 0, FORMAT, GL_FLOAT, nullptr);
+		}
+
+		void set_sub_image(int xoffset, int yoffset, int width, int height, const void* pixels) {
+			glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, width, height, FORMAT, GL_FLOAT, pixels);
 		}
 
 		void set_image(int width, int height, const void* pixels) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, pixels);
+			glTexImage2D(GL_TEXTURE_2D, 0, INTERNALFORMAT, width, height, 0, FORMAT, GL_FLOAT, pixels);
 		}
 
 		void get_image(int width, int height, void* pixels) const {
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, pixels);
+			glGetTexImage(GL_TEXTURE_2D, 0, FORMAT, GL_FLOAT, pixels);
 		}
 
 		void configure(GLint mag_filter = GL_NEAREST, GLint min_filter = GL_NEAREST, GLint wrap_s = GL_REPEAT, GLint wrap_t = GL_REPEAT) {
@@ -58,4 +63,7 @@ namespace ManualCAD
 			glDeleteTextures(1, &id);
 		}
 	};
+
+	using Texture = GlTexture<GL_RGBA>;
+	using TexMap = GlTexture<GL_RED, GL_R32F>;
 }

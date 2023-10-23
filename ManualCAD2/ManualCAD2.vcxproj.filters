@@ -52,6 +52,18 @@
     <Filter Include="Pliki źródłowe\combinatorics">
       <UniqueIdentifier>{7d8531eb-ecbb-48de-b91e-41bcd3f03395}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pliki źródłowe\milling">
+      <UniqueIdentifier>{a0a7b638-7655-4ee7-8f90-a30b500d98d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki źródłowe\milling\paths">
+      <UniqueIdentifier>{7970c138-c58c-49ab-b503-ddfe9f2205c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki źródłowe\milling\drawable">
+      <UniqueIdentifier>{626e7574-2226-4d9f-8232-2aae932f3898}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki źródłowe\tasks">
+      <UniqueIdentifier>{9cfe1417-3e57-46b4-ab93-492d51d7d059}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -158,6 +170,27 @@
     </ClCompile>
     <ClCompile Include="logger.cpp">
       <Filter>Pliki źródłowe\io</Filter>
+    </ClCompile>
+    <ClCompile Include="workpiece.cpp">
+      <Filter>Pliki źródłowe\milling\drawable</Filter>
+    </ClCompile>
+    <ClCompile Include="workpiece_renderable.cpp">
+      <Filter>Pliki źródłowe\milling\drawable</Filter>
+    </ClCompile>
+    <ClCompile Include="milling_program.cpp">
+      <Filter>Pliki źródłowe\milling\paths</Filter>
+    </ClCompile>
+    <ClCompile Include="height_map.cpp">
+      <Filter>Pliki źródłowe\maths</Filter>
+    </ClCompile>
+    <ClCompile Include="cutter.cpp">
+      <Filter>Pliki źródłowe\milling\drawable</Filter>
+    </ClCompile>
+    <ClCompile Include="triangle_mesh.cpp">
+      <Filter>Pliki źródłowe\drawable</Filter>
+    </ClCompile>
+    <ClCompile Include="system_dialog.cpp">
+      <Filter>Pliki źródłowe\gui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -290,6 +323,36 @@
     <ClInclude Include="logger.h">
       <Filter>Pliki źródłowe\io</Filter>
     </ClInclude>
+    <ClInclude Include="workpiece.h">
+      <Filter>Pliki źródłowe\milling\drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="cutter.h">
+      <Filter>Pliki źródłowe\milling\drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="workpiece_renderable.h">
+      <Filter>Pliki źródłowe\milling\drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="height_map.h">
+      <Filter>Pliki źródłowe\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="milling_program.h">
+      <Filter>Pliki źródłowe\milling\paths</Filter>
+    </ClInclude>
+    <ClInclude Include="task.h">
+      <Filter>Pliki źródłowe\tasks</Filter>
+    </ClInclude>
+    <ClInclude Include="cutter_move.h">
+      <Filter>Pliki źródłowe\milling\paths</Filter>
+    </ClInclude>
+    <ClInclude Include="triangle_mesh.h">
+      <Filter>Pliki źródłowe\drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="thick_line_rasterizer.h">
+      <Filter>Pliki źródłowe\milling\drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="system_dialog.h">
+      <Filter>Pliki źródłowe\gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\bin\glfw3.dll" />
@@ -356,10 +419,20 @@
     <CopyFileToFolders Include="line_trim_fragment_shader.glsl">
       <Filter>Pliki źródłowe\shaders</Filter>
     </CopyFileToFolders>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="line_tex_vertex_shader.glsl">
+    <CopyFileToFolders Include="workpiece_vertex_shader.glsl">
       <Filter>Pliki źródłowe\shaders</Filter>
-    </None>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="phong_fragment_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="workpiece_geometry_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="line_tex_vertex_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="triangle_vertex_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

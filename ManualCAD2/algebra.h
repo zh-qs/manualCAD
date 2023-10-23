@@ -13,9 +13,12 @@ namespace ManualCAD
 	struct Vector2 {
 		float x, y;
 		float length() const;
+		float lengthsq() const;
+		Vector2 normalize() const;
 
 		Vector2& operator+=(const Vector2& vec);
 		Vector2& operator-=(const Vector2& vec);
+		Vector2& operator*=(const float& a);
 
 		inline float* data() { return reinterpret_cast<float*>(this); }
 	};
@@ -61,10 +64,16 @@ namespace ManualCAD
 		inline unsigned int* data() { return reinterpret_cast<unsigned int*>(this); }
 	};
 
+	struct IndexTriple {
+		unsigned int i, j, k;
+		inline unsigned int* data() { return reinterpret_cast<unsigned int*>(this); }
+	};
+
 	static_assert(std::is_pod_v<Vector4>, "Vector4 needs to be POD, but it's not");
 	static_assert(std::is_pod_v<Vector3>, "Vector3 needs to be POD, but it's not");
 	static_assert(std::is_pod_v<Vector2>, "Vector2 needs to be POD, but it's not");
 	static_assert(std::is_pod_v<IndexPair>, "IndexPair needs to be POD, but it's not");
+	static_assert(std::is_pod_v<IndexTriple>, "IndexTriple needs to be POD, but it's not");
 
 	struct Matrix3x3 {
 		static const int DIMENSION = 3;
@@ -177,4 +186,10 @@ namespace ManualCAD
 
 	Matrix3x3 transpose(const Matrix3x3& mat);
 	Matrix4x4 transpose(const Matrix4x4& mat);
+
+	template <class V, class Number>
+	inline constexpr V lerp(const V& from, const V& to, const Number& percent) {
+		Number p = percent > 1 ? 1 : (percent < 0 ? 0 : percent);
+		return (1 - p) * from + p * to;
+	}
 }

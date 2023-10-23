@@ -100,10 +100,13 @@ namespace ManualCAD
 		// Serialization
 		virtual void add_to_serializer(Serializer& serializer, int idx) {}
 
+		virtual void dispose() { renderable.dispose(); }
+
 		class Deleter {
 		public:
 			void operator()(Object* obj) {
-				obj->renderable.dispose();
+				obj->dispose();
+				delete obj;
 			}
 		};
 

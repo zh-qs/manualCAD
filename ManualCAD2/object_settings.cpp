@@ -2,7 +2,10 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include "settings_window.h"
+#include "milling_program.h"
 #include <cstring>
+#include "logger.h"
+#include "system_dialog.h"
 
 namespace ManualCAD
 {
@@ -449,6 +452,76 @@ namespace ManualCAD
 		if (ImGui::Button("Show parameter space"))
 		{
 			parent.parameter_view.show_surface(surf);
+		}
+	}
+
+	void ObjectSettings::build_workpiece_settings(Workpiece& workpiece, ObjectSettingsWindow& parent)
+	{
+		ImGui::SeparatorText("Workpiece");
+		ImGui::BeginDisabled(!workpiece.can_execute_milling_program());
+		ImGui::Text("Divisions");
+		ImGui::SameLine();
+		if (ImGui::SliderInt("X", &workpiece.divisions_x, 100, 2000, NULL, ImGuiSliderFlags_NoInput))
+		{
+			workpiece.recreate_height_map();
+			workpiece.invalidate();
+		}
+		ImGui::SameLine();
+		if (ImGui::SliderInt("Y", &workpiece.divisions_y, 100, 2000, NULL, ImGuiSliderFlags_NoInput))
+		{
+			workpiece.recreate_height_map();
+			workpiece.invalidate();
+		}
+		if (ImGui::SliderFloat3("Size", workpiece.size.data(), 1.0f, 25.0f, NULL, ImGuiSliderFlags_NoInput))
+		{
+			workpiece.height_map.fill(workpiece.size);
+			workpiece.invalidate();
+		}
+		ImGui::EndDisabled();
+		if (!workpiece.can_execute_milling_program())
+			ImGui::Text("Parameters can't be edited during a simulation!");
+		ImGui::SeparatorText("Milling program");
+		if (ImGui::Button("Load program"))
+		{
+			const char* filename = nullptr;
+			try
+			{
+				filename = SystemDialog::open_file_dialog("Open", { {"*.k??", nullptr}, {"*.f??", nullptr} }, false);
+			}
+			catch (const std::exception& e)
+			{
+				Logger::log_error("[ERROR] Opening program file: %s\n", e.what());
+			}
+			if (filename != nullptr)
+			{
+				try {
+					workpiece.set_milling_program(MillingProgram::read_from_file(filename));
+				}
+				catch (std::runtime_error& e)
+				{
+					Logger::log_error("[ERROR] %s\n", e.what());
+				}
+			}
+		}
+		if (workpiece.has_milling_program())
+		{
+			auto& program = workpiece.get_milling_program();
+			ImGui::Text("%s loaded", program.get_name().c_str());
+			ImGui::Checkbox("Path visible", &workpiece.path.visible);
+			ImGui::Checkbox("Cutter visible", &workpiece.cylinder.visible);
+			ImGui::SeparatorText("Cutter");
+			ImGui::SliderFloat("Speed", &program.cutter_speed, 1.0f, 100.0f, NULL, ImGuiSliderFlags_NoInput);
+			ImGui::SliderFloat("Cutting part height", &program.cutter->cutting_part_height, 1.0f, 10.0f, NULL, ImGuiSliderFlags_NoInput);
+			ImGui::Text("Diameter: %.1f mm", program.cutter->get_diameter() * 10.0f);
+			ImGui::Text("Type: %s", program.cutter->get_type());
+
+			ImGui::BeginDisabled(!workpiece.can_execute_milling_program());
+			if (ImGui::Button("Animate"))
+				workpiece.animate_milling_program();
+			ImGui::EndDisabled();
+			ImGui::SameLine();
+			if (ImGui::Button("Immediate"))
+				workpiece.execute_milling_program_immediately();
 		}
 	}
 }

@@ -10,7 +10,7 @@ namespace ManualCAD
 		fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 	}
 
-	GlApplication::GlApplication(int width, int height, const char* title, const ImVec4& clear_color, /*Raycaster& raycaster, */ Renderer& renderer) : clear_color(clear_color), /*raycaster(raycaster),*/ renderer(renderer), controller() {
+	GlApplication::GlApplication(int width, int height, const char* title, const ImVec4& clear_color, /*Raycaster& raycaster, */ Renderer& renderer) : clear_color(clear_color), /*raycaster(raycaster),*/ renderer(renderer), controller(task_manager) {
 		glfwSetErrorCallback(glfw_error_callback);
 		if (!glfwInit())
 			THROW_EXCEPTION;
@@ -273,6 +273,9 @@ namespace ManualCAD
 			// draw objects
 			//raycaster.render(display_w, display_h);
 			auto objects = controller.get_objects();
+
+			// perform tasks
+			task_manager.execute_tasks();
 
 			// acquire renderable list
 			std::vector<const Renderable*> renderables(objects.size());
