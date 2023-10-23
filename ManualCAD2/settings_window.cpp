@@ -13,16 +13,16 @@ namespace ManualCAD
 	{
 		if (!check_and_confirm_unsaved())
 			return;
-		const char* filename = nullptr;
+		std::string filename;
 		try
 		{
-			filename = SystemDialog::open_file_dialog("Open", { {"*.json", "JSON file"} }, false);
+			filename = SystemDialog::open_file_dialog("Open", { {"*.json", "JSON file"} });
 		}
 		catch (const std::exception& e)
 		{
 			Logger::log_error("[ERROR] Opening JSON file: %s\n", e.what());
 		}
-		if (filename == nullptr)
+		if (filename.empty())
 			return;
 		std::string s(filename);
 		Serializer serializer(controller, camera);
@@ -41,7 +41,7 @@ namespace ManualCAD
 
 	void ObjectControllerSettingsWindow::save_model_to_file()
 	{
-		const char* filename = nullptr;
+		std::string filename;
 		try
 		{
 			filename = SystemDialog::save_file_dialog("Save", { { "*.json", "JSON file" } });
@@ -50,7 +50,7 @@ namespace ManualCAD
 		{
 			Logger::log_error("[ERROR] Saving JSON file: %s\n", e.what());
 		}
-		if (filename == nullptr)
+		if (filename.empty())
 			return;
 		std::string s(filename);
 		Serializer serializer(controller, camera);

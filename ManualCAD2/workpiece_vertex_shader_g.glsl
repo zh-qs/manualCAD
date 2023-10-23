@@ -1,8 +1,8 @@
 #version 410 compatibility
 
 in vec2 input_uv;
-out vec3 normal;
-out vec3 world_pos;
+//out vec3 normal;
+//out vec3 world_pos;
 
 uniform mat4 u_m;
 uniform mat4 u_pv;
@@ -45,13 +45,11 @@ void main() {
 		0.0f);
 	vec3 grad_z = vec3(0.0f,
 		u_size.y * (texture(u_height_map, vec2(input_uv.x, input_uv.y + u_uv_offset.y)).x - texture(u_height_map, vec2(input_uv.x, input_uv.y - u_uv_offset.y)).x),
-		2.0f * u_uv_offset.y);*/
-	vec3 perpendicular = vec3(-u_size.y / (2.0f * u_uv_offset.x * u_size.x) * (texture(u_height_map, vec2(input_uv.x + u_uv_offset.x, input_uv.y)).x - texture(u_height_map, vec2(input_uv.x - u_uv_offset.x, input_uv.y)).x),
-		1.0f,
-		-u_size.y / (2.0f * u_uv_offset.y * u_size.z) * (texture(u_height_map, vec2(input_uv.x, input_uv.y + u_uv_offset.y)).x - texture(u_height_map, vec2(input_uv.x, input_uv.y - u_uv_offset.y)).x));
+		2.0f * u_uv_offset.y);
 
-	normal = normalize(perpendicular);
+	normal = normalize(cross(grad_x, grad_z));
 	vec4 wp = u_m * pos;
 	world_pos = wp.xyz;
-	gl_Position = u_pv * wp;
+	gl_Position = u_pv * wp;*/
+	gl_Position = u_m * pos;
 }

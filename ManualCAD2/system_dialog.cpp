@@ -1,5 +1,6 @@
 #include "system_dialog.h"
 #include <tinyfiledialogs.h>
+#include <nfd.h>
 #include <vector>
 #include <tuple>
 #include <stdexcept>
@@ -19,6 +20,17 @@ namespace ManualCAD {
         }
 
         return { extensions, descriptions };
+    }
+
+    std::string link_patterns(const std::vector<const char*> extensions) {
+        if (extensions.empty()) 
+            return "";
+
+        std::string result(extensions[0]);
+        for (int i = 1; i < extensions.size(); ++i)
+            result += ";" + std::string{ extensions[i] };
+
+        return result;
     }
 
     const char* tinyfd_buttons[] = {
@@ -42,16 +54,50 @@ namespace ManualCAD {
         "error"
     };
 
-    const char* SystemDialog::open_file_dialog(const char* title, const std::initializer_list<Pattern>& patterns, bool allow_multiple_select)
+    std::string SystemDialog::open_file_dialog(const char* title, const std::initializer_list<Pattern>& patterns)
     {
-        auto vectors = process_patterns(patterns);
-        return tinyfd_openFileDialog(title, "", vectors.first.size(), vectors.first.data(), "", allow_multiple_select ? 1 : 0);
+        nfdchar_t* outPath = NULL;
+        std::string pattern_str = link_patterns(process_patterns(patterns).first);
+        nfdresult_t result = NFD_OpenDialog(pattern_str.c_str(), NULL, &outPath);
+
+        if (result == NFD_OKAY) {
+            std::string ret(outPath);
+            free(outPath);
+            return ret;
+        }
+        else if (result == NFD_CANCEL) {
+            return "";
+        }
+        else {
+            throw std::runtime_error(NFD_GetError());
+        }
+
+        // tinyfiledialog implementation -- sometimes throws on system DLLs
+        /*auto vectors = process_patterns(patterns);
+        return tinyfd_openFileDialog(title, "", vectors.first.size(), vectors.first.data(), "", allow_multiple_select ? 1 : 0);*/
     }
 
-    const char* SystemDialog::save_file_dialog(const char* title, const std::initializer_list<Pattern>& patterns)
+    std::string SystemDialog::save_file_dialog(const char* title, const std::initializer_list<Pattern>& patterns)
     {
-        auto vectors = process_patterns(patterns);
-        return tinyfd_saveFileDialog(title, "", vectors.first.size(), vectors.first.data(), "");
+        nfdchar_t* outPath = NULL;
+        std::string pattern_str = link_patterns(process_patterns(patterns).first);
+        nfdresult_t result = NFD_SaveDialog(pattern_str.c_str(), NULL, &outPath);
+
+        if (result == NFD_OKAY) {
+            std::string ret(outPath);
+            free(outPath);
+            return ret;
+        }
+        else if (result == NFD_CANCEL) {
+            return "";
+        }
+        else {
+            throw std::runtime_error(NFD_GetError());
+        }
+
+        // tinyfiledialog implementation -- sometimes throws on system DLLs
+        /*auto vectors = process_patterns(patterns);
+        return tinyfd_saveFileDialog(title, "", vectors.first.size(), vectors.first.data(), "");*/
     }
 
     SystemDialog::Button SystemDialog::message_box(const char* title, const char* message, ButtonType buttons, MessageBoxType type)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <initializer_list>
+#include <string>
 
 namespace ManualCAD
 {
@@ -23,8 +24,8 @@ namespace ManualCAD
 			Warning, Question, Info, Error
 		};
 
-		static const char* open_file_dialog(const char* title, const std::initializer_list<Pattern>& patterns, bool allow_multiple_select);
-		static const char* save_file_dialog(const char* title, const std::initializer_list<Pattern>& patterns);
+		static std::string open_file_dialog(const char* title, const std::initializer_list<Pattern>& patterns);
+		static std::string save_file_dialog(const char* title, const std::initializer_list<Pattern>& patterns);
 		static Button message_box(const char* title, const char* message, ButtonType buttons, MessageBoxType type);
 	};
 }

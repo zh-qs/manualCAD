@@ -45,7 +45,8 @@ namespace ManualCAD
 		rational_20_param_patch_shader.init("dummy_vertex_shader.glsl", "rational_20_param_patch_tess_control_shader.glsl", "rational_20_param_patch_tess_eval_shader.glsl", "patch_remove_diagonal_geometry_shader.glsl", "line_fragment_shader.glsl");
 		simple_shader.init("simple_rect_vertex_shader.glsl", "line_fragment_shader.glsl");
 		two_dim_shader.init("2d_vertex_shader.glsl", "wrap_around_parameters_geometry_shader.glsl", "line_fragment_shader.glsl");
-		workpiece_shader.init("workpiece_vertex_shader.glsl", "workpiece_geometry_shader.glsl", "phong_fragment_shader.glsl");
+		workpiece_shader.init("workpiece_vertex_shader.glsl", "phong_fragment_shader.glsl");
+		//workpiece_shader.init("workpiece_vertex_shader_g.glsl", "workpiece_geometry_shader.glsl", "phong_fragment_shader.glsl");
 		triangle_shader.init("triangle_vertex_shader.glsl", "phong_fragment_shader.glsl");
 
 		ul_pvm_location = line_shader.get_uniform_location("u_pvm");
@@ -99,6 +100,7 @@ namespace ManualCAD
 		uw_size_location = workpiece_shader.get_uniform_location("u_size");
 		uw_height_map_location = workpiece_shader.get_uniform_location("u_height_map");
 		uw_color_location = workpiece_shader.get_uniform_location("u_color");
+		uw_uv_offset_location = workpiece_shader.get_uniform_location("u_uv_offset");
 
 		ut_pvm_location = triangle_shader.get_uniform_location("u_pvm");
 		ut_m_location = triangle_shader.get_uniform_location("u_m");
@@ -500,6 +502,8 @@ namespace ManualCAD
 		glUniformMatrix4fv(uw_m_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(workpiece_renderable.get_model_matrix()).elem);
 		glUniform3f(uw_size_location, workpiece_renderable.parent_size.x, workpiece_renderable.parent_size.y, workpiece_renderable.parent_size.z);
 		glUniform4f(uw_color_location, color.x, color.y, color.z, color.w);
+		auto offset = workpiece_renderable.get_uv_offset();
+		glUniform2f(uw_uv_offset_location, offset.x, offset.y);
 
 		//mesh.vao.bind();
 		workpiece_renderable.bind_to_render();

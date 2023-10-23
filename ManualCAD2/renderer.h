@@ -69,6 +69,7 @@ namespace ManualCAD
 		GLint upa_patches_y_location, upb_patches_y_location;
 		GLint uw_size_location;
 		GLint uw_height_map_location;
+		GLint uw_uv_offset_location;
 
 		std::list<std::unique_ptr<RenderStep>> render_steps;
 	public:

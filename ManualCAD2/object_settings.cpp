@@ -483,19 +483,19 @@ namespace ManualCAD
 		ImGui::SeparatorText("Milling program");
 		if (ImGui::Button("Load program"))
 		{
-			const char* filename = nullptr;
+			std::string filename;
 			try
 			{
-				filename = SystemDialog::open_file_dialog("Open", { {"*.k??", nullptr}, {"*.f??", nullptr} }, false);
+				filename = SystemDialog::open_file_dialog("Open", { {"*.k??,*.f??", nullptr} });
 			}
 			catch (const std::exception& e)
 			{
 				Logger::log_error("[ERROR] Opening program file: %s\n", e.what());
 			}
-			if (filename != nullptr)
+			if (!filename.empty())
 			{
 				try {
-					workpiece.set_milling_program(MillingProgram::read_from_file(filename));
+					workpiece.set_milling_program(MillingProgram::read_from_file(filename.c_str()));
 				}
 				catch (std::runtime_error& e)
 				{

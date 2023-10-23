@@ -36,6 +36,7 @@ namespace ManualCAD {
 
 		size_t get_indices_count() const { return indices_count; }
 		const TexMap& get_texture() const { return texture; }
+		Vector2 get_uv_offset() const { return { 1.0f / (divisions_x - 1), 1.0f / (divisions_y - 1) }; }
 
 		void render(Renderer& renderer, int width, int height, float thickness = 1.0f) const override;
 		void dispose() override { Renderable::dispose(); ebo.dispose(); }

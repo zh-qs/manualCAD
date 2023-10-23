@@ -64,6 +64,9 @@
     <Filter Include="Pliki źródłowe\tasks">
       <UniqueIdentifier>{9cfe1417-3e57-46b4-ab93-492d51d7d059}</UniqueIdentifier>
     </Filter>
+    <Filter Include="nativefiledialogs">
+      <UniqueIdentifier>{069f7c4c-68b9-40d1-b0a1-c8e8725ea7f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -191,6 +194,12 @@
     </ClCompile>
     <ClCompile Include="system_dialog.cpp">
       <Filter>Pliki źródłowe\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nativefiledialog\src\nfd_common.c">
+      <Filter>nativefiledialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nativefiledialog\src\nfd_win.cpp">
+      <Filter>nativefiledialogs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -432,6 +441,9 @@
       <Filter>Pliki źródłowe\shaders</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="triangle_vertex_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="workpiece_vertex_shader_g.glsl">
       <Filter>Pliki źródłowe\shaders</Filter>
     </CopyFileToFolders>
   </ItemGroup>
