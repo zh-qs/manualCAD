@@ -1,5 +1,6 @@
 #include "milling_program.h"
 #include <fstream>
+#include <iomanip>
 #include <stdexcept>
 #include <string>
 #include "workpiece.h"
@@ -252,9 +253,9 @@ namespace ManualCAD
 
 		bool execute(const TaskParameters& parameters) override
 		{
-			percent += speed * parameters.delta_time / path_length;
+			percent += speed * parameters.delta_time;
 
-			Vector3 current_pos = lerp(from, to, percent);
+			Vector3 current_pos = lerp(from, to, percent / path_length);
 			workpiece.set_cutter_mesh_position({ current_pos.x, current_pos.z, current_pos.y });
 			auto current = workpiece.height_map.position_to_pixel(current_pos);
 			std::pair<int, int> current_pixel = { lroundf(current.x), lroundf(current.y) };
@@ -270,12 +271,12 @@ namespace ManualCAD
 			previous_pixel = current_pixel;
 			previous_pos = current_pos;
 
-			return percent < 1.0f;
+			return percent < path_length;
 		}
 
 		void execute_immediately(const TaskParameters& parameters) override
 		{
-			percent += 1.0f;
+			percent += path_length;
 			execute(parameters);
 		}
 	};
@@ -329,8 +330,49 @@ namespace ManualCAD
 			process_line(line, program);
 		}
 
+		s.close();
+
 		program.moves.pop_front();
 
 		return program;
+	}
+
+	void append_vector(std::ostream& s, const Vector3& vec)
+	{
+		s << std::setprecision(3)
+			<< "X" << vec.x
+			<< "Y" << vec.y
+			<< "Z" << vec.z
+			<< std::endl;
+	}
+
+	void MillingProgram::save_to_file(const char* filename)
+	{
+		int instruction_idx = 3;
+
+		std::ofstream s(filename);
+
+		if (!s.good())
+			throw std::runtime_error("Error creating file " + std::string(filename));
+
+		if (moves.empty())
+		{
+			s.close();
+			return;
+		}
+
+		auto& first = moves.front();
+		s << "N" << instruction_idx << "G" << (first.fast ? "00" : "01");
+		append_vector(s, first.origin);
+		instruction_idx++;
+
+		for (auto& move : moves)
+		{
+			s << "N" << instruction_idx << "G" << (move.fast ? "00" : "01");
+			append_vector(s, move.destination);
+			instruction_idx++;
+		}
+
+		s.close();
 	}
 }

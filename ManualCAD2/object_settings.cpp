@@ -477,6 +477,7 @@ namespace ManualCAD
 			workpiece.height_map.fill(workpiece.size);
 			workpiece.invalidate();
 		}
+		ImGui::SliderFloat("Max cutter depth", &workpiece.max_cutter_depth, 1.0f, 15.0f, NULL, ImGuiSliderFlags_NoInput);
 		ImGui::EndDisabled();
 		if (!workpiece.can_execute_milling_program())
 			ImGui::Text("Parameters can't be edited during a simulation!");

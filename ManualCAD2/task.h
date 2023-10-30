@@ -25,7 +25,7 @@ namespace ManualCAD
 	{
 		friend class TaskManager;
 
-		std::queue<std::unique_ptr<SingleTaskStep>> steps;
+		std::list<std::unique_ptr<SingleTaskStep>> steps;
 		std::chrono::time_point<std::chrono::high_resolution_clock> previous_time_point;
 		bool stopped = false;
 		bool paused = false;
@@ -48,11 +48,16 @@ namespace ManualCAD
 			previous_time_point = std::chrono::high_resolution_clock::now();
 
 			if (!should_continue)
-				steps.pop();
+			{
+				steps.pop_front();
+			}
 		}
 		
 	public:
-		Task(bool& task_ended) : task_ended(task_ended) { task_ended = false; }
+		Task(bool& task_ended) : task_ended(task_ended) { 
+			task_ended = false; 
+			previous_time_point = std::chrono::high_resolution_clock::now();
+		}
 
 		inline void execute_immediately() {
 			while (!ended())
@@ -61,13 +66,13 @@ namespace ManualCAD
 				std::chrono::duration<float> time_delta = time_point - previous_time_point;
 				steps.front()->execute_immediately({ time_delta.count() });
 				previous_time_point = std::chrono::high_resolution_clock::now();
-				steps.pop();
+				steps.pop_front();
 			}
 			task_ended = true;
 		}
 
 		template <class T, class... Args>
-		inline void add_step(Args&&... args) { steps.push(std::make_unique<T>(std::forward<Args>(args)...)); }
+		inline void add_step(Args&&... args) { steps.push_back(std::make_unique<T>(std::forward<Args>(args)...)); }
 
 		inline bool ended() { return stopped || steps.empty(); }
 

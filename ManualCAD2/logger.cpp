@@ -80,7 +80,8 @@ namespace ManualCAD
 		void log_warning(const char* fmt, va_list args) override { std::apply([fmt, args](Ls&... ls) { (ls.log_warning(fmt, args), ...); }, loggers); }
 	};
 
-	using LoggerImpl = CompositeLogger<WindowsConsoleLogger, FileLogger>;
+	//using LoggerImpl = CompositeLogger<WindowsConsoleLogger, FileLogger>;
+	using LoggerImpl = WindowsConsoleLogger;
 
 	std::unique_ptr<Logger> Logger::LOGGER = std::make_unique<LoggerImpl>();
 }

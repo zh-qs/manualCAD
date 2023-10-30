@@ -50,5 +50,6 @@ namespace ManualCAD
 		std::vector<Vector3> get_cutter_positions() const;
 
 		static MillingProgram read_from_file(const char* filename);
+		void save_to_file(const char* filename);
 	};
 }

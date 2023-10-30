@@ -2,6 +2,7 @@
 
 #include "algebra.h"
 #include "height_map.h"
+#include <string>
 
 namespace ManualCAD
 {
