@@ -11,6 +11,9 @@ namespace ManualCAD
 	}
 
 	GlApplication::GlApplication(int width, int height, const char* title, const ImVec4& clear_color, /*Raycaster& raycaster, */ Renderer& renderer) : clear_color(clear_color), /*raycaster(raycaster),*/ renderer(renderer), controller(task_manager) {
+		if constexpr (ApplicationSettings::DEBUG)
+			printf("[INFO] Running in DEBUG mode");
+		
 		glfwSetErrorCallback(glfw_error_callback);
 		if (!glfwInit())
 			THROW_EXCEPTION;

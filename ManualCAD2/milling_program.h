@@ -36,12 +36,12 @@ namespace ManualCAD
 		void add_move(CutterMove&& move) { moves.push_back(std::move(move)); }
 		void set_cutter(std::unique_ptr<Cutter>&& cutter) { this->cutter = std::move(cutter); }
 		const Cutter& get_cutter() const { return *cutter; }
-		const Vector3& get_start_position() const {
+		Vector3 get_start_position() const {
 			if (moves.empty())
 				return { 0.0f,0.0f,10.0f };
 			return moves.front().origin;
 		}
-		const Vector3& get_end_position() const {
+		Vector3 get_end_position() const {
 			if (moves.empty()) 
 				return { 0.0f,0.0f,10.0f };
 			return moves.back().destination;

@@ -67,6 +67,9 @@
     <Filter Include="nativefiledialogs">
       <UniqueIdentifier>{069f7c4c-68b9-40d1-b0a1-c8e8725ea7f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pliki źródłowe\milling\objects">
+      <UniqueIdentifier>{99852495-7e68-4790-8e49-da9274e51c0f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -174,9 +177,6 @@
     <ClCompile Include="logger.cpp">
       <Filter>Pliki źródłowe\io</Filter>
     </ClCompile>
-    <ClCompile Include="workpiece.cpp">
-      <Filter>Pliki źródłowe\milling\drawable</Filter>
-    </ClCompile>
     <ClCompile Include="workpiece_renderable.cpp">
       <Filter>Pliki źródłowe\milling\drawable</Filter>
     </ClCompile>
@@ -185,9 +185,6 @@
     </ClCompile>
     <ClCompile Include="height_map.cpp">
       <Filter>Pliki źródłowe\maths</Filter>
-    </ClCompile>
-    <ClCompile Include="cutter.cpp">
-      <Filter>Pliki źródłowe\milling\drawable</Filter>
     </ClCompile>
     <ClCompile Include="triangle_mesh.cpp">
       <Filter>Pliki źródłowe\drawable</Filter>
@@ -200,6 +197,18 @@
     </ClCompile>
     <ClCompile Include="..\nativefiledialog\src\nfd_win.cpp">
       <Filter>nativefiledialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="renderable.cpp">
+      <Filter>Pliki źródłowe\drawable</Filter>
+    </ClCompile>
+    <ClCompile Include="workpiece.cpp">
+      <Filter>Pliki źródłowe\milling\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="cutter.cpp">
+      <Filter>Pliki źródłowe\milling\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="prototype.cpp">
+      <Filter>Pliki źródłowe\milling\objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -332,12 +341,6 @@
     <ClInclude Include="logger.h">
       <Filter>Pliki źródłowe\io</Filter>
     </ClInclude>
-    <ClInclude Include="workpiece.h">
-      <Filter>Pliki źródłowe\milling\drawable</Filter>
-    </ClInclude>
-    <ClInclude Include="cutter.h">
-      <Filter>Pliki źródłowe\milling\drawable</Filter>
-    </ClInclude>
     <ClInclude Include="workpiece_renderable.h">
       <Filter>Pliki źródłowe\milling\drawable</Filter>
     </ClInclude>
@@ -361,6 +364,18 @@
     </ClInclude>
     <ClInclude Include="system_dialog.h">
       <Filter>Pliki źródłowe\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="workpiece.h">
+      <Filter>Pliki źródłowe\milling\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="cutter.h">
+      <Filter>Pliki źródłowe\milling\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="prototype.h">
+      <Filter>Pliki źródłowe\milling\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="box.h">
+      <Filter>Pliki źródłowe\maths</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

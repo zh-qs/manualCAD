@@ -15,6 +15,7 @@ namespace ManualCAD
 	SimpleRect::SimpleRect() : Renderable() {
 		vbo.bind();
 		vbo.set_static_data(vertices, sizeof(vertices));
+		vao.unbind();
 	}
 
 	void SimpleRect::render(Renderer& renderer, int width, int height, float thickness) const

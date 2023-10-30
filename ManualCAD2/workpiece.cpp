@@ -64,7 +64,7 @@ namespace ManualCAD {
 
 	std::vector<ObjectHandle> Workpiece::clone() const
 	{
-		return std::vector<ObjectHandle>(); // IntersectionCurve is a special object and thus can't be cloned
+		return std::vector<ObjectHandle>(); // Workpiece is a special object and thus can't be cloned
 	}
 
 	void Workpiece::on_delete()

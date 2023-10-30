@@ -12,8 +12,8 @@ namespace ManualCAD
 	public:
 		bool looped = false;
 
-		Line(const Matrix4x4& model) : Renderable(model) {}
-		Line() : Renderable() {}
+		Line(const Matrix4x4& model) : Renderable(model) { vao.unbind(); }
+		Line() : Renderable() { vao.unbind(); }
 		
 		inline size_t get_point_count() const { return point_count; }
 
@@ -25,11 +25,10 @@ namespace ManualCAD
 	class Line2D : public Renderable {
 		size_t point_count = 0;
 		Range<float> urange, vrange;
-
 	public:
 		bool looped = false;
 
-		Line2D(const Range<float>& urange, const Range<float>& vrange) : Renderable(2), urange(urange), vrange(vrange) {}
+		Line2D(const Range<float>& urange, const Range<float>& vrange) : Renderable(2), urange(urange), vrange(vrange) { vao.unbind(); }
 
 		inline size_t get_point_count() const { return point_count; }
 		inline Range<float> get_u_range() const { return urange; }

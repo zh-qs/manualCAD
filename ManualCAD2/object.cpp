@@ -1644,7 +1644,7 @@ namespace ManualCAD
 
 			do
 			{
-				//check_timeout(start_time);
+				check_timeout(start_time);
 
 				const auto P1 = surf1.evaluate(sol.x, sol.y), P2 = surf2.evaluate(sol.z, sol.w);
 				F = Vector4::extend(P1 - P2, dot(P1 - P, tangent) - step);

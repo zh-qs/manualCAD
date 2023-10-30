@@ -104,6 +104,8 @@ namespace ManualCAD
 		}
 
 		void remove_selected_objects() {
+			on_selection_changed();
+
 			auto s_it = selected_indices.begin();
 			auto it = objects.begin();
 			int i = 0;
@@ -143,7 +145,6 @@ namespace ManualCAD
 			}
 			selected_indices.clear();
 			is_collection_valid = false;
-			on_selection_changed();
 		}
 		int get_nearest_object_from_pixels(float x, float y, const Camera& camera, int width, int height);
 

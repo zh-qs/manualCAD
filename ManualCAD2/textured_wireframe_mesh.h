@@ -17,16 +17,18 @@ namespace ManualCAD
 		size_t point_count = 0, line_count = 0;
 
 		static const Matrix4x4 IDENTITY;
-	public:
-		TexturedWireframeMesh(const Matrix4x4& model, const Texture& texture) : Renderable(model), ebo(), texvbo(), texture(texture) { 
+
+		void init_additional_buffers() {
 			texvbo.init();
 			texvbo.bind();
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-			ebo.init(); 
-			ebo.bind(); 
+			texvbo.attrib_buffer(1, 2, GL_FLOAT);
+			ebo.init();
+			ebo.bind();
+			vao.unbind();
 		}
-		TexturedWireframeMesh(const Texture& texture) : TexturedWireframeMesh(Matrix4x4::identity(), texture) {}
+	public:
+		TexturedWireframeMesh(const Matrix4x4& model, const Texture& texture) : Renderable(model), ebo(), texvbo(), texture(texture) { init_additional_buffers(); }
+		TexturedWireframeMesh(const Texture& texture) : TexturedWireframeMesh(Matrix4x4::identity(), texture) { init_additional_buffers(); }
 		
 		inline size_t get_point_count() const { return point_count; }
 		inline size_t get_line_count() const { return line_count; }

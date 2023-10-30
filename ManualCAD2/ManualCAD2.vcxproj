@@ -187,11 +187,13 @@
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="milling_program.cpp" />
+    <ClCompile Include="prototype.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="object_controller.cpp" />
     <ClCompile Include="object_settings.cpp" />
     <ClCompile Include="parameter_space_view_window.cpp" />
     <ClCompile Include="rational_20_param_surface.cpp" />
+    <ClCompile Include="renderable.cpp" />
     <ClCompile Include="serializer.cpp" />
     <ClCompile Include="settings_window.cpp" />
     <ClCompile Include="simple_rect.cpp" />
@@ -212,6 +214,7 @@
   <ItemGroup>
     <ClInclude Include="application_settings.h" />
     <ClInclude Include="axes_cursor.h" />
+    <ClInclude Include="box.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="bilinear_form_raycastable.h" />
     <ClInclude Include="cursor.h" />
@@ -221,6 +224,7 @@
     <ClInclude Include="graph.h" />
     <ClInclude Include="height_map.h" />
     <ClInclude Include="milling_program.h" />
+    <ClInclude Include="prototype.h" />
     <ClInclude Include="system_dialog.h" />
     <ClInclude Include="task.h" />
     <ClInclude Include="triangle_mesh.h" />

@@ -1,6 +1,7 @@
 #pragma once
 #include "object.h"
 #include "workpiece.h"
+#include "prototype.h"
 
 namespace ManualCAD
 {
@@ -22,5 +23,6 @@ namespace ManualCAD
 		static void build_intersection_curve_settings(IntersectionCurve& curve, ObjectSettingsWindow& parent);
 		static void build_parametric_surface_settings(ParametricSurface& surf, ObjectSettingsWindow& parent);
 		static void build_workpiece_settings(Workpiece& workpiece, ObjectSettingsWindow& parent);
+		static void build_prototype_settings(Prototype& prototype, ObjectSettingsWindow& parent);
 	};
 }

@@ -13,13 +13,19 @@ namespace ManualCAD
 		size_t point_count = 0;
 		size_t group_count = 0;
 		ElementBuffer ebo;
+
+		void init_additional_buffers() {
+			ebo.init(); 
+			ebo.bind();
+			vao.unbind();
+		}
 	public:
 		Vector4 polyline_color = { 0.0f,0.0f,0.0f,0.0f };
 		bool draw_polyline = false;
 		bool draw_curve = true;
 
-		CurveWithPolyline(const Matrix4x4& model) : Renderable(model), ebo() { ebo.init(); ebo.bind(); }
-		CurveWithPolyline() : Renderable(), ebo() { ebo.init(); ebo.bind(); }
+		CurveWithPolyline(const Matrix4x4& model) : Renderable(model), ebo() { init_additional_buffers(); }
+		CurveWithPolyline() : Renderable(), ebo() { init_additional_buffers(); }
 		/*CurveWithPolyline(const std::vector<const Point*>& point_ptrs, const Matrix4x4& model, bool draw_polyline, bool draw_curve) : Renderable(model), point_ptrs(point_ptrs), draw_polyline(draw_polyline), draw_curve(draw_curve) {}
 		CurveWithPolyline() : CurveWithPolyline({}, Matrix4x4::identity(), false, true) {}
 		CurveWithPolyline(CurveWithPolyline&& cwp) noexcept : Renderable(std::move(cwp.model)), point_ptrs(std::move(cwp.point_ptrs)), draw_polyline(std::move(cwp.draw_polyline)), draw_curve(std::move(cwp.draw_curve)) {}

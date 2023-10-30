@@ -295,7 +295,7 @@ void ManualCAD::Serializer::deserialize(const std::filesystem::path& filepath)
 			bool cylinder = s0_it->uWrapped || s0_it->vWrapped;
 
 			if (s0_it->uWrapped && s0_it->vWrapped)
-				throw std::invalid_argument("Surface can't ba wrapped in both directions");
+				throw std::invalid_argument("Surface can't be wrapped in both directions");
 
 			int points_x = 3 * patches_x + 1;
 			int points_y = 3 * patches_y + 1;
@@ -313,8 +313,8 @@ void ManualCAD::Serializer::deserialize(const std::filesystem::path& filepath)
 						}
 				}
 			}
-			for (auto* p : points)
-				p->increment_persistence();
+			/*for (auto* p : points)
+				p->increment_persistence();*/ // done in constructor
 
 			auto surf = Object::create<BicubicC0BezierSurface>(points, patches_x, patches_y, cylinder);
 
@@ -356,8 +356,8 @@ void ManualCAD::Serializer::deserialize(const std::filesystem::path& filepath)
 						}
 				}
 			}
-			for (auto* p : points)
-				p->increment_persistence();
+			/*for (auto* p : points)
+				p->increment_persistence();*/ // done in constructor
 
 			auto surf = Object::create<BicubicC2BezierSurface>(points, patches_x, patches_y, cylinder);
 			

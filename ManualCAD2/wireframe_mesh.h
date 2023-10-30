@@ -14,9 +14,15 @@ namespace ManualCAD
 		size_t point_count = 0, line_count = 0;
 
 		static const Matrix4x4 IDENTITY;
+
+		void init_additional_buffers() {
+			ebo.init(); 
+			ebo.bind();
+			vao.unbind();
+		}
 	public:
-		WireframeMesh(const Matrix4x4& model) : Renderable(model), ebo() { ebo.init(); ebo.bind(); }
-		WireframeMesh() : Renderable(), ebo() { ebo.init(); ebo.bind(); }
+		WireframeMesh(const Matrix4x4& model) : Renderable(model), ebo() { init_additional_buffers(); }
+		WireframeMesh() : Renderable(), ebo() { init_additional_buffers(); }
 		/*WireframeMesh(size_t points_count, size_t lines_count, const Matrix4x4& model) : Renderable(model), points(points_count), line_indices(lines_count) {}
 		WireframeMesh() : WireframeMesh(0, 0, Matrix4x4::identity()) {}
 		WireframeMesh(WireframeMesh&& mesh) noexcept : Renderable(std::move(mesh)), points(std::move(mesh.points)), line_indices(std::move(mesh.line_indices)) {}

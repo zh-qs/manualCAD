@@ -11,6 +11,7 @@ namespace ManualCAD
 		AxesCursor() : Renderable() {
 			vbo.bind();
 			vbo.set_static_data(reinterpret_cast<const float*>(coords), sizeof(coords));
+			vao.unbind();
 		}
 		inline constexpr unsigned int get_vertex_count() const { return COORDS_SIZE; }
 		void render(Renderer& renderer, int width, int height, float thickness = 1.0f) const override;

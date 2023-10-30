@@ -15,6 +15,7 @@
 #include "rectangle.h"
 #include "graph.h"
 #include "toggling_texture.h"
+#include "box.h"
 
 namespace ManualCAD
 {
@@ -121,6 +122,8 @@ namespace ManualCAD
 		template <class O, class... Args>
 		static Handle<O> create_at_cursor(const Cursor& cursor, Args&&... args) {
 			auto obj = create<O>(std::forward<Args>(args)...);
+			if constexpr (ApplicationSettings::DEBUG)
+				Renderable::assert_unbound();
 			obj->transformation.position = cursor.get_world_position();
 			obj->renderable.set_model_matrix(obj->transformation.get_matrix());
 			return obj;
@@ -158,6 +161,8 @@ namespace ManualCAD
 		virtual Vector3 normal(float u, float v) const = 0;
 		virtual Vector3 du(float u, float v) const = 0;
 		virtual Vector3 dv(float u, float v) const = 0;
+
+		virtual Box get_bounding_box() const = 0;
 
 		bool v_wraps_at_u(float u) const {
 			auto vrange = get_v_range();
@@ -351,6 +356,10 @@ namespace ManualCAD
 			const float Rrcos = large_radius + small_radius * cosf(u);
 			const Vector4 local = { -Rrcos * sinf(v), 0.0f, Rrcos * cosf(v), 0.0f };
 			return (transformation.get_matrix() * local).xyz();
+		}
+
+		Box get_bounding_box() const override {
+			return Box::degenerate(); // TODO
 		}
 
 		std::vector<ObjectHandle> clone() const override;
@@ -601,7 +610,7 @@ namespace ManualCAD
 		BicubicC0BezierSurface(const std::vector<Point*>& points, int patches_x, int patches_y, bool cylinder) : surf(&trim_texture.get_texture()), ParametricSurface(surf), points(points), patches_x(patches_x), patches_y(patches_y), cylinder(cylinder) {
 			name = "Bezier C0 surface " + std::to_string(counter++);
 			transformable = false;
-			for (auto& p : points)
+			for (auto* p : points)
 			{
 				p->increment_persistence();
 				p->add_observer(*this);
@@ -631,6 +640,13 @@ namespace ManualCAD
 		Vector3 normal(float u, float v) const override;
 		Vector3 du(float u, float v) const override;
 		Vector3 dv(float u, float v) const override;
+
+		Box get_bounding_box() const override {
+			Box box = Box::degenerate();
+			for (const auto* p : points)
+				box.add(p->transformation.position);
+			return box;
+		}
 
 		std::vector<ObjectHandle> clone() const override;
 
@@ -725,6 +741,13 @@ namespace ManualCAD
 		Vector3 normal(float u, float v) const override;
 		Vector3 du(float u, float v) const override;
 		Vector3 dv(float u, float v) const override;
+
+		Box get_bounding_box() const override {
+			Box box = Box::degenerate();
+			for (const auto* p : points)
+				box.add(p->transformation.position);
+			return box; // TODO maybe we can make smaller box?
+		}
 
 		std::vector<ObjectHandle> clone() const override;
 	};

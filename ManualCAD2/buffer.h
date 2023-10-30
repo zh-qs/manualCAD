@@ -31,6 +31,12 @@ namespace ManualCAD
 		void dispose() {
 			glDeleteBuffers(1, &id);
 		}
+
+		template <typename = std::enable_if_t<TARGET == GL_ARRAY_BUFFER>>
+		void attrib_buffer(GLuint index, GLint size = 3, GLenum type = GL_FLOAT) {
+			glEnableVertexAttribArray(index);
+			glVertexAttribPointer(index, size, type, GL_FALSE, 0, nullptr);
+		}
 	};
 
 	using VertexBuffer = GlBuffer<GLfloat, GL_ARRAY_BUFFER>;

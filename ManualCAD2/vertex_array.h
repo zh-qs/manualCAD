@@ -22,5 +22,9 @@ namespace ManualCAD
 		void dispose() {
 			glDeleteVertexArrays(1, &id);
 		}
+
+		GLuint get_id() const {
+			return id;
+		}
 	};
 }

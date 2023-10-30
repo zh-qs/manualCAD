@@ -114,12 +114,15 @@ namespace ManualCAD
 		quad_vao.bind();
 		quad_screen_vbo.bind();
 		quad_screen_vbo.set_static_data(screen_vertices, sizeof(screen_vertices));
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-		glEnableVertexAttribArray(0);
+		quad_screen_vbo.attrib_buffer(0, 3, GL_FLOAT);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+		//glEnableVertexAttribArray(0);
 		quad_uvs_vbo.bind();
 		quad_uvs_vbo.set_static_data(screen_uvs, sizeof(screen_uvs));
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-		glEnableVertexAttribArray(1);
+		quad_uvs_vbo.attrib_buffer(1, 2, GL_FLOAT);
+		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+		//glEnableVertexAttribArray(1);
+		quad_vao.unbind();
 
 		quad_shader.init("raycasting_vertex_shader.glsl", "stereoscopy_quad_fragment_shader.glsl");
 
@@ -204,6 +207,7 @@ namespace ManualCAD
 			// render screen
 			quad_vao.bind();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
+			quad_vao.unbind();
 		}
 		else
 		{
@@ -233,6 +237,8 @@ namespace ManualCAD
 
 		glLineWidth(thickness);
 		glDrawElements(GL_LINES, 2 * mesh.get_line_count(), GL_UNSIGNED_INT, NULL);
+
+		mesh.unbind_from_render();
 	}
 
 	void Renderer::render_textured_wireframe(const TexturedWireframeMesh& mesh, const Vector4& color, int width, int height, float thickness)
@@ -251,6 +257,8 @@ namespace ManualCAD
 
 		glLineWidth(thickness);
 		glDrawElements(GL_LINES, 2 * mesh.get_line_count(), GL_UNSIGNED_INT, NULL);
+
+		mesh.unbind_from_render();
 	}
 
 	void Renderer::render_points(const PointSet& mesh, const Vector4& color, int width, int height, float thickness)
@@ -269,6 +277,8 @@ namespace ManualCAD
 
 		glPointSize(thickness * ApplicationSettings::RENDER_POINT_SIZE);
 		glDrawArrays(GL_POINTS, 0, mesh.get_point_count());
+
+		mesh.unbind_from_render();
 	}
 
 	void Renderer::render_curve_and_polyline(const CurveWithPolyline& curve, const Vector4& color, int width, int height, float thickness)
@@ -284,6 +294,8 @@ namespace ManualCAD
 
 			glLineWidth(thickness);
 			glDrawArrays(GL_LINE_STRIP, 0, curve.get_point_count());
+
+			curve.unbind_from_render();
 		}
 		if (curve.draw_curve) {
 			bezier_shader.use();
@@ -296,6 +308,8 @@ namespace ManualCAD
 
 			glLineWidth(thickness);
 			glDrawElements(GL_LINES_ADJACENCY, curve.get_line_indices_count(), GL_UNSIGNED_INT, NULL);
+
+			curve.unbind_from_render();
 		}
 	}
 
@@ -312,6 +326,8 @@ namespace ManualCAD
 
 		glLineWidth(thickness);
 		glDrawArrays(GL_LINES, 0, ac.get_vertex_count());
+
+		ac.unbind_from_render();
 	}
 
 	void Renderer::render_surface_and_bezier_contour(const SurfaceWithBezierContour& surf, const Vector4& color, int width, int height, float thickness)
@@ -328,6 +344,8 @@ namespace ManualCAD
 
 			glLineWidth(thickness);
 			glDrawElements(GL_LINES, surf.get_contour_indices_count(), GL_UNSIGNED_INT, NULL);
+
+			surf.unbind_from_render();
 		}
 		if (surf.draw_patch)
 		{
@@ -352,6 +370,8 @@ namespace ManualCAD
 			glLineWidth(thickness);
 			glDrawElements(GL_PATCHES, surf.get_patch_indices_count(), GL_UNSIGNED_INT, NULL);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			surf.unbind_from_render();
 		}
 	}
 
@@ -369,6 +389,8 @@ namespace ManualCAD
 
 			glLineWidth(thickness);
 			glDrawElements(GL_LINES, surf.get_contour_indices_count(), GL_UNSIGNED_INT, NULL);
+
+			surf.unbind_from_render();
 		}
 		if (surf.draw_patch)
 		{
@@ -393,6 +415,8 @@ namespace ManualCAD
 			glLineWidth(thickness);
 			glDrawElements(GL_PATCHES, surf.get_patch_indices_count(), GL_UNSIGNED_INT, NULL);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			surf.unbind_from_render();
 		}
 	}
 
@@ -410,6 +434,8 @@ namespace ManualCAD
 
 			glLineWidth(thickness);
 			glDrawElements(GL_LINES, surf.get_contour_indices_count(), GL_UNSIGNED_INT, NULL);
+
+			surf.unbind_from_render();
 		}
 		if (surf.draw_patch)
 		{
@@ -426,6 +452,8 @@ namespace ManualCAD
 			glLineWidth(thickness);
 			glDrawArrays(GL_PATCHES, 0, surf.get_point_count());
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			surf.unbind_from_render();
 		}
 		
 		//// debug
@@ -457,6 +485,8 @@ namespace ManualCAD
 		rect.bind_to_render();
 		glLineWidth(thickness);
 		glDrawArrays(GL_LINE_STRIP, 0, rect.get_line_strip_vertices_count());
+
+		rect.unbind_from_render();
 	}
 
 	void Renderer::render_line(const Line& line, const Vector4& color, int width, int height, float thickness)
@@ -472,6 +502,8 @@ namespace ManualCAD
 
 		glLineWidth(thickness);
 		glDrawArrays(line.looped ? GL_LINE_LOOP : GL_LINE_STRIP, 0, line.get_point_count());
+
+		line.unbind_from_render();
 	}
 
 	void Renderer::render_line_2d(const Line2D& line, const Vector4& color, int width, int height, float thickness)
@@ -488,6 +520,8 @@ namespace ManualCAD
 
 		glLineWidth(thickness);
 		glDrawArrays(line.looped ? GL_LINE_LOOP : GL_LINE_STRIP, 0, line.get_point_count());
+
+		line.unbind_from_render();
 	}
 
 	void Renderer::render_workpiece_renderable(const WorkpieceRenderable& workpiece_renderable, const Vector4& color, int width, int height, float thickness)
@@ -510,6 +544,8 @@ namespace ManualCAD
 
 		//glLineWidth(thickness);
 		glDrawElements(GL_TRIANGLES, workpiece_renderable.get_indices_count(), GL_UNSIGNED_INT, NULL);
+
+		workpiece_renderable.unbind_from_render();
 	}
 
 	void Renderer::render_triangle_mesh(const TriangleMesh& mesh, const Vector4& color, int width, int height, float thickness)
@@ -525,6 +561,8 @@ namespace ManualCAD
 
 		glLineWidth(thickness);
 		glDrawElements(GL_TRIANGLES, 3 * mesh.get_triangle_count(), GL_UNSIGNED_INT, NULL);
+
+		mesh.unbind_from_render();
 	}
 
 	void Renderer::enable_depth_testing()

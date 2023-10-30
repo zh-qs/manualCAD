@@ -9,6 +9,26 @@
 
 namespace ManualCAD
 {
+	template <class O, template <class T> class Container>
+	void build_objects_list(const char* name, Object& obj, Container<const O*>& points) {
+		if (ImGui::BeginListBox(name)) {
+			int idx = 0;
+			for (auto it = points.begin(); it != points.end();) {
+				ImGui::Text("%s", (*it)->name.c_str());
+				std::string tag = "##" + std::to_string(idx++);				
+
+				ImGui::SameLine();
+				std::string label_with_tag = "X" + tag;
+				if (obj.invalidate_if(ImGui::Button(label_with_tag.c_str()))) {
+					it = points.erase(it);
+				}
+				else it++;
+			}
+
+			ImGui::EndListBox();
+		}
+	}
+
 	template <class Curve, template <class T> class Container>
 	void build_points_list(Curve& curve, Container<Point*>& points) {
 		if (ImGui::BeginListBox("Points")) {
@@ -91,6 +111,7 @@ namespace ManualCAD
 			object.name.assign(input_buf);
 		}
 
+		//ImGui::Text("Persistence: %d", object.persistence);
 		//ImGui::SeparatorText("Observers");
 		//for (const auto* o : object.observers)
 		//	ImGui::Text("%s", o->name.c_str());
@@ -524,5 +545,14 @@ namespace ManualCAD
 			if (ImGui::Button("Immediate"))
 				workpiece.execute_milling_program_immediately();
 		}
+	}
+
+	void ObjectSettings::build_prototype_settings(Prototype& prototype, ObjectSettingsWindow& parent)
+	{
+		ImGui::SeparatorText("Prototype");
+		prototype.invalidate_if(ImGui::SliderFloat3("Size", prototype.size.data(), 1.0f, 25.0f, NULL, ImGuiSliderFlags_NoInput));
+		prototype.invalidate_if(ImGui::SliderFloat("Model height", &prototype.mill_height, 0.0f, prototype.size.y, NULL, ImGuiSliderFlags_NoInput));
+		prototype.invalidate_if(ImGui::SliderFloat("Offset", &prototype.offset, 0.0f, 0.4f * std::min(prototype.size.x, prototype.size.z), NULL, ImGuiSliderFlags_NoInput));
+		build_objects_list<ParametricSurface, std::list>("Surfaces", prototype, prototype.surfaces);
 	}
 }

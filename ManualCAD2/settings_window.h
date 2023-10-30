@@ -6,6 +6,7 @@
 #include "renderer.h"
 #include "object.h"
 #include "workpiece.h"
+#include "prototype.h"
 #include "object_controller.h"
 #include "cursor.h"
 #include <string>
@@ -90,6 +91,35 @@ namespace ManualCAD
 			}
 		}
 	};
+
+	template <class T, template <class P> class Container>
+	std::optional<T*> try_create_object_from_surfaces(ObjectController& controller, bool& not_surf)
+	{
+		using SurfT = const ParametricSurface*;
+		auto& selected = controller.get_selected_objects();
+		Container<SurfT> surfs;
+		if constexpr (std::is_same_v<Container<SurfT>, std::vector<SurfT>>)
+		{
+			surfs.reserve(selected.count());
+		}
+
+		for (auto* obj : selected) {
+			SurfT ptr = dynamic_cast<SurfT>(obj);
+			if (ptr == nullptr) {
+				not_surf = true;
+				break;
+			}
+			surfs.push_back(ptr);
+		}
+		if (!not_surf)
+		{
+			auto h = Object::create<T>(surfs);
+			T* ptr = h.get();
+			controller.add_object(std::move(h));
+			return ptr;
+		}
+		return std::nullopt;
+	}
 
 	template <class T, template <class P> class Container>
 	std::optional<T*> try_create_object_from_points(ObjectController& controller, bool& selected_empty, bool& not_point)
@@ -248,6 +278,10 @@ namespace ManualCAD
 					{
 						controller.add_object(Object::create<Workpiece>(task_manager));
 					}
+					if (ImGui::MenuItem("Milling prototype"))
+					{
+						try_create_object_from_surfaces<Prototype, std::list>(controller, not_param_surface);
+					}
 					ImGui::EndMenu();
 				}
 
@@ -282,7 +316,7 @@ namespace ManualCAD
 				ImGui::Checkbox("Take cursor as a hint", &intersection_cursor_hint);
 				if (!intersection_cursor_hint)
 				{
-					ImGui::SliderInt("Samples along constant parameter", &intersection_sample_count, 1, 15, nullptr, ImGuiSliderFlags_NoInput);
+					ImGui::SliderInt("Samples along constant parameter", &intersection_sample_count, 1, 50, nullptr, ImGuiSliderFlags_NoInput);
 				}
 				if (ImGui::Button("Create"))
 				{

@@ -66,7 +66,7 @@ namespace ManualCAD
 
 		std::vector<ObjectHandle> clone() const override;
 
-		void dispose() override { Object::dispose(); path.dispose(); }
+		void dispose() override { Object::dispose(); path.dispose(); cylinder.dispose(); }
 		void on_delete() override;
 	};
 }

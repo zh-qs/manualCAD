@@ -13,23 +13,18 @@ namespace ManualCAD
 		size_t point_count = 0, triangle_count = 0;
 
 		static const Matrix4x4 IDENTITY;
-	public:
-		TriangleMesh(const Matrix4x4& model) : Renderable(model), ebo(), normal_vbo() { 
+
+		void init_additional_buffers() {
 			normal_vbo.init();
 			normal_vbo.bind();
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-			ebo.init(); 
-			ebo.bind(); 
-		}
-		TriangleMesh() : Renderable(), ebo(), normal_vbo() {
-			normal_vbo.init();
-			normal_vbo.bind();
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+			normal_vbo.attrib_buffer(1, 3, GL_FLOAT);
 			ebo.init();
 			ebo.bind();
+			vao.unbind();
 		}
+	public:
+		TriangleMesh(const Matrix4x4& model) : Renderable(model), ebo(), normal_vbo() { init_additional_buffers(); }
+		TriangleMesh() : Renderable(), ebo(), normal_vbo() { init_additional_buffers(); }
 
 		inline size_t get_point_count() const { return point_count; }
 		inline size_t get_triangle_count() const { return triangle_count; }
