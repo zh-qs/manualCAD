@@ -41,7 +41,7 @@ namespace ManualCAD
 
 		static const int STEREOSCOPY_POVS = 2;
 		FrameBuffer fbo[STEREOSCOPY_POVS];
-		Texture texture[STEREOSCOPY_POVS];
+		RenderTexture texture[STEREOSCOPY_POVS];
 		VertexArray quad_vao;
 		VertexBuffer quad_screen_vbo;
 		VertexBuffer quad_uvs_vbo;

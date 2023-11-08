@@ -10,7 +10,7 @@
 namespace ManualCAD
 {
 	template <class O, template <class T> class Container>
-	void build_objects_list(const char* name, Object& obj, Container<const O*>& points) {
+	void build_objects_list(const char* name, Prototype& prototype, Container<const O*>& points) {
 		if (ImGui::BeginListBox(name)) {
 			int idx = 0;
 			for (auto it = points.begin(); it != points.end();) {
@@ -19,7 +19,7 @@ namespace ManualCAD
 
 				ImGui::SameLine();
 				std::string label_with_tag = "X" + tag;
-				if (obj.invalidate_if(ImGui::Button(label_with_tag.c_str()))) {
+				if (prototype.invalidate_object_and_box_if(ImGui::Button(label_with_tag.c_str()))) {
 					it = points.erase(it);
 				}
 				else it++;
@@ -468,7 +468,7 @@ namespace ManualCAD
 		}
 	}
 
-	void ObjectSettings::build_parametric_surface_settings(ParametricSurface& surf, ObjectSettingsWindow& parent)
+	void ObjectSettings::build_parametric_surface_settings(ParametricSurfaceObject& surf, ObjectSettingsWindow& parent)
 	{
 		if (ImGui::Button("Show parameter space"))
 		{
@@ -553,6 +553,50 @@ namespace ManualCAD
 		prototype.invalidate_if(ImGui::SliderFloat3("Size", prototype.size.data(), 1.0f, 25.0f, NULL, ImGuiSliderFlags_NoInput));
 		prototype.invalidate_if(ImGui::SliderFloat("Model height", &prototype.mill_height, 0.0f, prototype.size.y, NULL, ImGuiSliderFlags_NoInput));
 		prototype.invalidate_if(ImGui::SliderFloat("Offset", &prototype.offset, 0.0f, 0.4f * std::min(prototype.size.x, prototype.size.z), NULL, ImGuiSliderFlags_NoInput));
-		build_objects_list<ParametricSurface, std::list>("Surfaces", prototype, prototype.surfaces);
+		build_objects_list<ParametricSurfaceObject, std::list>("Surfaces", prototype, prototype.surfaces);
+
+		ImGui::SeparatorText("Generate program");
+		const char* items[] = {"Rough", "Flat plane", "Envelope", "Detailed", "Signature"};
+		static int item_current;
+		ImGui::Combo("Program type", &item_current, items, IM_ARRAYSIZE(items));
+		const char* cutters[] = { "K16", "K08", "K01", "F12", "F10" };
+		static int cutter_current;
+		ImGui::Combo("Cutter type", &cutter_current, cutters, IM_ARRAYSIZE(cutters));
+		if (ImGui::Button("Generate"))
+		{
+			std::unique_ptr<Cutter> cutter;
+			if (cutter_current > 2)
+				cutter = std::make_unique<FlatCutter>(cutter_current == 3 ? 1.2f : 1.0f);
+			else
+				cutter = std::make_unique<BallCutter>(cutter_current == 0 ? 1.6f : (cutter_current == 1 ? 0.8f : 0.1f));
+			prototype.generate_program(static_cast<Prototype::ProgramType>(item_current), std::move(cutter));
+		}
+
+		if (prototype.generated_program.has_value())
+		{
+			ImGui::SeparatorText("Milling program");
+			auto& program = prototype.generated_program.value();
+			ImGui::Text("Name: %s", program.get_name().c_str());
+			//ImGui::Checkbox("visible", &workpiece.path.visible);
+			ImGui::SeparatorText("Cutter");
+			//ImGui::SliderFloat("Speed", &program.cutter_speed, 1.0f, 100.0f, NULL, ImGuiSliderFlags_NoInput);
+			//ImGui::SliderFloat("Cutting part height", &program.cutter->cutting_part_height, 1.0f, 10.0f, NULL, ImGuiSliderFlags_NoInput);
+			ImGui::Text("Diameter: %.1f mm", program.cutter->get_diameter() * 10.0f);
+			ImGui::Text("Type: %s", program.cutter->get_type());
+			
+			if (ImGui::Button("Save"))
+			{
+
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Clear"))
+				prototype.remove_program();
+		}
+
+		ImGui::SeparatorText("Experimental");
+		if (ImGui::Button("Build and show envelope"))
+		{
+			prototype.show_envelope_experimental();
+		}
 	}
 }

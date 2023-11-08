@@ -19,7 +19,7 @@ namespace ManualCAD
 		return pixel * (range.to - range.from) / dim + range.from;
 	}
 
-	void flood_fill(Image& image, int x, int y, const Vector4& color, const ParametricSurface& surf)
+	void flood_fill(Image& image, int x, int y, const Vector4& color, const ParametricSurfaceObject& surf)
 	{
 		const auto old = image.pixel(x, y);
 		if (color == old) return;

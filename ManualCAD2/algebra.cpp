@@ -87,6 +87,11 @@ namespace ManualCAD
 		return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
 	}
 
+	float dot(const Vector2& vec1, const Vector2& vec2)
+	{
+		return vec1.x * vec2.x + vec1.y * vec2.y;
+	}
+
 	float Vector4::length() const
 	{
 		return sqrt(x * x + y * y + z * z + w * w);;
@@ -252,6 +257,26 @@ namespace ManualCAD
 			vec.x * mat.elem[1][0] + vec.y * mat.elem[1][1] + vec.z * mat.elem[1][2],
 			vec.x * mat.elem[2][0] + vec.y * mat.elem[2][1] + vec.z * mat.elem[2][2],
 		};
+	}
+
+	float cross_sign(const Vector2& vec1, const Vector2& vec2)
+	{
+		return vec1.x * vec2.y - vec1.y * vec2.x;
+	}
+
+	Vector2 normalize(const Vector2& vec) {
+		auto l = vec.length();
+		return { vec.x / l, vec.y / l };
+	}
+
+	Vector2 max(const Vector2& vec1, const Vector2& vec2)
+	{
+		return { std::max(vec1.x,vec2.x), std::max(vec1.y,vec2.y) };
+	}
+
+	Vector2 min(const Vector2& vec1, const Vector2& vec2)
+	{
+		return { std::min(vec1.x,vec2.x), std::min(vec1.y,vec2.y) };
 	}
 
 	Vector2 operator+(const Vector2& vec1, const Vector2& vec2)

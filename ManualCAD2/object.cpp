@@ -4,9 +4,6 @@
 #include "object_controller.h"
 #include "settings_window.h"
 #include "serializer.h"
-#include "linear_equation_system_4x4.h"
-#include <ctime>
-#include <random>
 #include <map>
 
 namespace ManualCAD
@@ -568,6 +565,41 @@ namespace ManualCAD
 		ObjectSettings::build_parametric_surface_settings(*this, parent);
 	}
 
+	void BicubicC0BezierSurface::decompose_uv(float u, float v, float& uu, float& vv, int& ui, int& vi) const
+	{
+		float uif, vif;
+		uu = modf(u, &uif);
+		vv = modf(v, &vif);
+
+		ui = 3 * static_cast<int>(uif);
+		vi = 3 * static_cast<int>(vif);
+
+		const int points_x = 3 * patches_x + 1,
+			points_y = 3 * patches_y + 1;
+
+		if (uif < 0)
+		{
+			uu -= uif;
+			ui = 0;
+		}
+		else if (uif >= patches_x)
+		{
+			uu += 1.0f + uif - patches_x;
+			ui = points_x - 4;
+		}
+
+		if (vif < 0)
+		{
+			vv -= vif;
+			vi = 0;
+		}
+		if (vif >= patches_y)
+		{
+			vv = 1.0f + vif - patches_y;
+			vi = points_y - 4;
+		}
+	}
+
 	void BicubicC0BezierSurface::on_delete()
 	{
 		for (auto* p : points)
@@ -693,35 +725,11 @@ namespace ManualCAD
 
 	Vector3 BicubicC0BezierSurface::evaluate(float u, float v) const
 	{
-		float uif, vif;
-		float uu = modf(u, &uif), vv = modf(v, &vif);
-
-		int ui = 3 * static_cast<int>(uif), vi = 3 * static_cast<int>(vif);
-
-		int points_x = 3 * patches_x + 1,
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		const int points_x = 3 * patches_x + 1,
 			points_y = 3 * patches_y + 1;
-
-		if (uif < 0)
-		{
-			uu -= uif;
-			ui = 0;
-		}
-		else if (uif >= patches_x)
-		{
-			uu += 1.0f + uif - patches_x;
-			ui = points_x - 4;
-		}
-
-		if (vif < 0)
-		{
-			vv -= vif;
-			vi = 0;
-		}
-		if (vif >= patches_y)
-		{
-			vv = 1.0f + vif - patches_y;
-			vi = points_y - 4;
-		}
 
 		Vector3 p[4];
 		for (int i = 0; i < 4; ++i)
@@ -760,35 +768,11 @@ namespace ManualCAD
 
 	Vector3 BicubicC0BezierSurface::du(float u, float v) const
 	{
-		float uif, vif;
-		float uu = modf(u, &uif), vv = modf(v, &vif);
-
-		int ui = 3 * static_cast<int>(uif), vi = 3 * static_cast<int>(vif);
-
-		int points_x = 3 * patches_x + 1,
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		const int points_x = 3 * patches_x + 1,
 			points_y = 3 * patches_y + 1;
-
-		if (uif < 0)
-		{
-			uu -= uif;
-			ui = 0;
-		}
-		else if (uif >= patches_x)
-		{
-			uu += 1.0f + uif - patches_x;
-			ui = points_x - 4;
-		}
-
-		if (vif < 0)
-		{
-			vv -= vif;
-			vi = 0;
-		}
-		if (vif >= patches_y)
-		{
-			vv = 1.0f + vif - patches_y;
-			vi = points_y - 4;
-		}
 
 		Vector3 p[4];
 		for (int i = 0; i < 4; ++i)
@@ -823,35 +807,11 @@ namespace ManualCAD
 
 	Vector3 BicubicC0BezierSurface::dv(float u, float v) const
 	{
-		float uif, vif;
-		float uu = modf(u, &uif), vv = modf(v, &vif);
-
-		int ui = 3 * static_cast<int>(uif), vi = 3 * static_cast<int>(vif);
-
-		int points_x = 3 * patches_x + 1,
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		const int points_x = 3 * patches_x + 1,
 			points_y = 3 * patches_y + 1;
-
-		if (uif < 0)
-		{
-			uu -= uif;
-			ui = 0;
-		}
-		else if (uif >= patches_x)
-		{
-			uu += 1.0f + uif - patches_x;
-			ui = points_x - 4;
-		}
-
-		if (vif < 0)
-		{
-			vv -= vif;
-			vi = 0;
-		}
-		if (vif >= patches_y)
-		{
-			vv = 1.0f + vif - patches_y;
-			vi = points_y - 4;
-		}
 
 		Vector3 p[4];
 		for (int i = 0; i < 4; ++i)
@@ -882,6 +842,142 @@ namespace ManualCAD
 		p[0] = (1 - vv) * p[0] + vv * p[1];
 
 		return p[0];
+	}
+
+	Vector3 BicubicC0BezierSurface::duu(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		const int points_x = 3 * patches_x + 1,
+			points_y = 3 * patches_y + 1;
+
+		Vector3 p[4];
+		for (int i = 0; i < 4; ++i)
+		{
+			auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+				b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+				b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+				b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+			// second derivatives instead of first de Casteljau step
+			b0 = 6.0f * (b2 - 2.0f * b1 + b0);
+			b1 = 6.0f * (b3 - 2.0f * b2 + b1);
+
+			p[i] = (1 - uu) * b0 + uu * b1;
+		}
+
+		p[0] = (1 - vv) * p[0] + vv * p[1];
+		p[1] = (1 - vv) * p[1] + vv * p[2];
+		p[2] = (1 - vv) * p[2] + vv * p[3];
+
+		p[0] = (1 - vv) * p[0] + vv * p[1];
+		p[1] = (1 - vv) * p[1] + vv * p[2];
+
+		p[0] = (1 - vv) * p[0] + vv * p[1];
+
+		return p[0];
+	}
+
+	Vector3 BicubicC0BezierSurface::duv(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		const int points_x = 3 * patches_x + 1,
+			points_y = 3 * patches_y + 1;
+
+		Vector3 p[4];
+		for (int i = 0; i < 4; ++i)
+		{
+			auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+				b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+				b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+				b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+			// derivatives instead of first de Casteljau step
+			b0 = 3.0f * (b1 - b0);
+			b1 = 3.0f * (b2 - b1);
+			b2 = 3.0f * (b3 - b2);
+
+			b0 = (1 - uu) * b0 + uu * b1;
+			b1 = (1 - uu) * b1 + uu * b2;
+
+			p[i] = (1 - uu) * b0 + uu * b1;
+		}
+
+		// derivatives instead of first de Casteljau step
+		p[0] = 3.0f * (p[1] - p[0]);
+		p[1] = 3.0f * (p[2] - p[1]);
+		p[2] = 3.0f * (p[3] - p[2]);
+
+		p[0] = (1 - vv) * p[0] + vv * p[1];
+		p[1] = (1 - vv) * p[1] + vv * p[2];
+
+		p[0] = (1 - vv) * p[0] + vv * p[1];
+
+		return p[0];
+	}
+
+	Vector3 BicubicC0BezierSurface::dvv(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		const int points_x = 3 * patches_x + 1,
+			points_y = 3 * patches_y + 1;
+
+		Vector3 p[4];
+		for (int i = 0; i < 4; ++i)
+		{
+			auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+				b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+				b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+				b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+			b0 = (1 - uu) * b0 + uu * b1;
+			b1 = (1 - uu) * b1 + uu * b2;
+			b2 = (1 - uu) * b2 + uu * b3;
+
+			b0 = (1 - uu) * b0 + uu * b1;
+			b1 = (1 - uu) * b1 + uu * b2;
+
+			p[i] = (1 - uu) * b0 + uu * b1;
+		}
+
+		// second derivatives instead of first de Casteljau step
+		p[0] = 6.0f * (p[2] - 2.0f * p[1] + p[0]);
+		p[1] = 6.0f * (p[3] - 2.0f * p[2] + p[1]);
+
+		p[0] = (1 - vv) * p[0] + vv * p[1];
+
+		return p[0];
+	}
+
+	std::vector<RangedBox<float>> BicubicC0BezierSurface::get_patch_bounds() const
+	{
+		const int points_x = 3 * patches_x + 1,
+			points_y = 3 * patches_y + 1;
+		std::vector<RangedBox<float>> result;
+		result.reserve(patches_x * patches_y);
+		for (int i = 0; i < patches_x; ++i)
+		{
+			for (int j = 0; j < patches_y; ++j)
+			{
+				Box box = Box::degenerate();
+				for (int k = 0; k < 4; ++k)
+				{
+					for (int l = 0; l < 4; ++l)
+					{
+						box.add(points[(3 * i + k) + (3 * j + l) * points_x]->transformation.position);
+					}
+				}
+				Range<float> us = { i,i + 1 },
+					vs = { j,j + 1 };
+				result.push_back({ box, us,vs });
+			}
+		}
+		return result;
 	}
 
 	std::vector<ObjectHandle> BicubicC0BezierSurface::clone() const
@@ -928,7 +1024,7 @@ namespace ManualCAD
 		{
 			for (int j = 0; j < new_patches_y; ++j)
 			{
-				
+
 			}
 		}
 	}*/
@@ -1014,6 +1110,41 @@ namespace ManualCAD
 	{
 		ObjectSettings::build_bicubic_c2_bezier_surface_settings(*this, parent);
 		ObjectSettings::build_parametric_surface_settings(*this, parent);
+	}
+
+	void BicubicC2BezierSurface::decompose_uv(float u, float v, float& uu, float& vv, int& ui, int& vi) const
+	{
+		float uif, vif;
+		uu = modf(u, &uif);
+		vv = modf(v, &vif);
+
+		ui = static_cast<int>(uif);
+		vi = static_cast<int>(vif);
+
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		if (uif < 0)
+		{
+			uu -= uif;
+			ui = 0;
+		}
+		else if (uif >= patches_x)
+		{
+			uu += 1.0f + uif - patches_x;
+			ui = points_x - 4;
+		}
+
+		if (vif < 0)
+		{
+			vv -= vif;
+			vi = 0;
+		}
+		if (vif >= patches_y)
+		{
+			vv = 1.0f + vif - patches_y;
+			vi = points_y - 4;
+		}
 	}
 
 	void BicubicC2BezierSurface::on_delete()
@@ -1113,35 +1244,11 @@ namespace ManualCAD
 
 	Vector3 BicubicC2BezierSurface::evaluate(float u, float v) const
 	{
-		float uif, vif;
-		float uu = modf(u, &uif), vv = modf(v, &vif);
-
-		int ui = static_cast<int>(uif), vi = static_cast<int>(vif);
-
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
 		int points_x = patches_x + 3,
 			points_y = patches_y + 3;
-
-		if (uif < 0)
-		{
-			uu -= uif;
-			ui = 0;
-		}
-		else if (uif >= patches_x)
-		{
-			uu += 1.0f + uif - patches_x;
-			ui = points_x - 4;
-		}
-
-		if (vif < 0)
-		{
-			vv -= vif;
-			vi = 0;
-		}
-		if (vif >= patches_y)
-		{
-			vv = 1.0f + vif - patches_y;
-			vi = points_y - 4;
-		}
 
 		Vector3 p[4];
 
@@ -1181,35 +1288,11 @@ namespace ManualCAD
 
 	Vector3 BicubicC2BezierSurface::du(float u, float v) const
 	{
-		float uif, vif;
-		float uu = modf(u, &uif), vv = modf(v, &vif);
-
-		int ui = static_cast<int>(uif), vi = static_cast<int>(vif);
-
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
 		int points_x = patches_x + 3,
 			points_y = patches_y + 3;
-
-		if (uif < 0)
-		{
-			uu -= uif;
-			ui = 0;
-		}
-		else if (uif >= patches_x)
-		{
-			uu += 1.0f + uif - patches_x;
-			ui = points_x - 4;
-		}
-
-		if (vif < 0)
-		{
-			vv -= vif;
-			vi = 0;
-		}
-		if (vif >= patches_y)
-		{
-			vv = 1.0f + vif - patches_y;
-			vi = points_y - 4;
-		}
 
 		Vector3 p[4];
 
@@ -1245,35 +1328,11 @@ namespace ManualCAD
 
 	Vector3 BicubicC2BezierSurface::dv(float u, float v) const
 	{
-		float uif, vif;
-		float uu = modf(u, &uif), vv = modf(v, &vif);
-
-		int ui = static_cast<int>(uif), vi = static_cast<int>(vif);
-
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
 		int points_x = patches_x + 3,
 			points_y = patches_y + 3;
-
-		if (uif < 0)
-		{
-			uu -= uif;
-			ui = 0;
-		}
-		else if (uif >= patches_x)
-		{
-			uu += 1.0f + uif - patches_x;
-			ui = points_x - 4;
-		}
-
-		if (vif < 0)
-		{
-			vv -= vif;
-			vi = 0;
-		}
-		if (vif >= patches_y)
-		{
-			vv = 1.0f + vif - patches_y;
-			vi = points_y - 4;
-		}
 
 		Vector3 p[4];
 
@@ -1305,6 +1364,153 @@ namespace ManualCAD
 			// derivative
 			return n2m1 * (p[1] - p[0]) + n20 * (p[2] - p[1]) + n21 * (p[3] - p[2]);
 		}
+	}
+
+	Vector3 BicubicC2BezierSurface::duu(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			//const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			//const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				// second derivative
+				p[i] = n10 * (b2 - 2.0f * b1 + b0) + n11 * (b3 - 2.0f * b2 + b1);
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+
+			return n3m2 * p[0] + n3m1 * p[1] + n30 * p[2] + n31 * p[3];
+		}
+	}
+
+	Vector3 BicubicC2BezierSurface::duv(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			//const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				// derivative
+				p[i] = n2m1 * (b1 - b0) + n20 * (b2 - b1) + n21 * (b3 - b2);
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			//const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+
+			// derivative
+			return n2m1 * (p[1] - p[0]) + n20 * (p[2] - p[1]) + n21 * (p[3] - p[2]);
+		}
+	}
+
+	Vector3 BicubicC2BezierSurface::dvv(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				p[i] = n3m2 * b0 + n3m1 * b1 + n30 * b2 + n31 * b3;
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			//const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			//const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+
+			// second derivative
+			return n10 * (p[2] - 2.0f * p[1] + p[0]) + n11 * (p[3] - 2.0f * p[2] + p[1]);
+		}
+	}
+
+	std::vector<RangedBox<float>> BicubicC2BezierSurface::get_patch_bounds() const
+	{
+		const int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+		std::vector<RangedBox<float>> result;
+		result.reserve(patches_x * patches_y);
+		for (int i = 0; i < patches_x; ++i)
+		{
+			for (int j = 0; j < patches_y; ++j)
+			{
+				Box box = Box::degenerate();
+				for (int k = 0; k < 4; ++k)
+				{
+					for (int l = 0; l < 4; ++l)
+					{
+						box.add(points[(i + k) + (j + l) * points_x]->transformation.position);
+					}
+				}
+				Range<float> us = { i,i + 1 },
+					vs = { j,j + 1 };
+				result.push_back({ box, us,vs });
+			}
+		}
+		return result;
 	}
 
 	std::vector<ObjectHandle> BicubicC2BezierSurface::clone() const
@@ -1572,468 +1778,33 @@ namespace ManualCAD
 		return { std::move(points), Object::create<InterpolationSpline>(point_ptrs) };
 	}
 
-	inline void check_timeout(const std::clock_t& start_time)
+	Object::Handle<IntersectionCurve> IntersectionCurve::intersect_surfaces_with_hint(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, float step, size_t max_steps, const Vector3& hint, const bool force_loop)
 	{
-		if constexpr (ApplicationSettings::BREAK_ON_TIMEOUT)
-		{
-			auto current_time = std::clock();
-			if (current_time - start_time > ApplicationSettings::COMPUTATION_TIMEOUT)
-				throw TimeoutException();
-		}
+		return Object::create<IntersectionCurve>(surf1, surf2, ParametricSurfaceIntersection::intersect_surfaces_with_hint(surf1, surf2, step, max_steps, hint, force_loop));
 	}
 
-	Object::Handle<IntersectionCurve> IntersectionCurve::intersect_surfaces(ParametricSurface& surf1, ParametricSurface& surf2, float step, size_t max_steps, const Vector2& uv1start, const Vector2& uv2start)
+	Object::Handle<IntersectionCurve> IntersectionCurve::intersect_surfaces_without_hint(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y, const bool force_loop)
 	{
-		static constexpr float EPS = 1e-5f;
-
-		//const auto xx1 = surf1.evaluate(uv1start.x, uv1start.y), xx2 = surf2.evaluate(uv2start.x, uv2start.y), xx3 = xx1 - xx2;
-		if (!surf1.get_u_range().contains(uv1start.x)
-			|| !surf1.get_v_range().contains(uv1start.y)
-			|| !surf2.get_u_range().contains(uv2start.x)
-			|| !surf2.get_v_range().contains(uv2start.y)
-			|| (surf1.evaluate(uv1start.x, uv1start.y) - surf2.evaluate(uv2start.x, uv2start.y)).length() >= 1e-4f)
-			throw CommonIntersectionPointNotFoundException();
-
-		std::list<Vector2> uvs1, uvs2;
-		//uvs1.reserve(max_steps);
-		//uvs2.reserve(max_steps);
-
-		uvs1.push_back(uv1start);
-		uvs2.push_back(uv2start);
-
-		bool inverse_direction = false;
-		bool reverse_tangent_after_singular_point = false; // used by singular points handling
-		bool singular_point_crossed = false;
-
-		int step_count = 1;
-		bool looped = false;
-
-		while (step_count++ < max_steps)
-		{
-			//const auto idx = uvs1.size() - 1;
-			const auto uv1 = inverse_direction ? uvs1.front() : uvs1.back(),
-				uv2 = inverse_direction ? uvs2.front() : uvs2.back();
-
-			const auto norm1 = surf1.normal(uv1.x, uv1.y), norm2 = surf2.normal(uv2.x, uv2.y);
-			const auto cr = cross(norm1, norm2);
-
-			if (cr.length() == 0.0f)
-				throw new CommonIntersectionPointNotFoundException();
-
-			auto tangent = normalize(cr);
-
-			if (inverse_direction)
-				tangent = -tangent;
-
-			if (reverse_tangent_after_singular_point)
-			{
-				//perpendicular_direction = false;
-				tangent = -tangent;//normalize(cross(norm1, tangent));
-			}
-
-			const auto P = surf1.evaluate(uv1.x, uv1.y);
-
-			bool should_change_direction = false;
-
-			// Newton iterations
-			Vector4 F;
-			Matrix4x4 jacobian;
-			Vector4 sol = { uv1.x, uv1.y, uv2.x, uv2.y }, prev_sol;
-
-			const auto start_time = std::clock();
-
-			do
-			{
-				check_timeout(start_time);
-
-				const auto P1 = surf1.evaluate(sol.x, sol.y), P2 = surf2.evaluate(sol.z, sol.w);
-				F = Vector4::extend(P1 - P2, dot(P1 - P, tangent) - step);
-				const auto dP1u = surf1.du(sol.x, sol.y), dP1v = surf1.dv(sol.x, sol.y),
-					dP2u = -surf2.du(sol.z, sol.w), dP2v = -surf2.dv(sol.z, sol.w);
-
-				jacobian.elem[0][0] = dP1u.x;
-				jacobian.elem[0][1] = dP1v.x;
-				jacobian.elem[0][2] = dP2u.x;
-				jacobian.elem[0][3] = dP2v.x;
-
-				jacobian.elem[1][0] = dP1u.y;
-				jacobian.elem[1][1] = dP1v.y;
-				jacobian.elem[1][2] = dP2u.y;
-				jacobian.elem[1][3] = dP2v.y;
-
-				jacobian.elem[2][0] = dP1u.z;
-				jacobian.elem[2][1] = dP1v.z;
-				jacobian.elem[2][2] = dP2u.z;
-				jacobian.elem[2][3] = dP2v.z;
-
-				jacobian.elem[3][0] = dot(dP1u, tangent);
-				jacobian.elem[3][1] = dot(dP1v, tangent);
-				jacobian.elem[3][2] = 0.0f;
-				jacobian.elem[3][3] = 0.0f;
-
-				prev_sol = sol;
-				auto l = LinearEquationSystem4x4::solve(jacobian, -F);
-				auto d = jacobian * l;
-				//if ((d + F).length() > EPS)
-					//THROW_EXCEPTION;
-				if (!isfinite(l.x))
-					throw CommonIntersectionPointNotFoundException();
-				//return Object::create<IntersectionCurve>(surf1, surf2, uvs1, uvs2, looped);
-				sol += l;
-				if (!surf1.get_u_range().contains(sol.x) || !surf1.get_v_range().contains(sol.y)
-					|| !surf2.get_u_range().contains(sol.z) || !surf2.get_v_range().contains(sol.w))
-					break;
-			} while (F.length() >= EPS);
-			//while ((sol - prev_sol).length() >= EPS);
-
-			if (!surf1.get_u_range().contains(sol.x))
-			{
-				if (surf1.u_wraps_at_v(sol.y))
-					sol.x = surf1.get_u_range().wrap(sol.x);
-				else
-				{
-					sol.x = surf1.get_u_range().clamp(sol.x);
-					/*if (inverse_direction)
-						break;
-					inverse_direction = true;
-					continue;*/
-					should_change_direction = true;
-				}
-			}
-			if (!surf1.get_v_range().contains(sol.y))
-			{
-				if (surf1.v_wraps_at_u(sol.x))
-					sol.y = surf1.get_v_range().wrap(sol.y);
-				else
-				{
-					sol.y = surf1.get_v_range().clamp(sol.y);
-					/*if (inverse_direction)
-						break;
-					inverse_direction = true;
-					continue;*/
-					should_change_direction = true;
-				}
-			}
-			if (!surf2.get_u_range().contains(sol.z))
-			{
-				if (surf2.u_wraps_at_v(sol.w))
-					sol.z = surf2.get_u_range().wrap(sol.z);
-				else
-				{
-					sol.z = surf2.get_u_range().clamp(sol.z);
-					/*if (inverse_direction)
-						break;
-					inverse_direction = true;
-					continue;*/
-					should_change_direction = true;
-				}
-			}
-			if (!surf2.get_v_range().contains(sol.w))
-			{
-				if (surf2.v_wraps_at_u(sol.z))
-					sol.w = surf2.get_v_range().wrap(sol.w);
-				else
-				{
-					sol.w = surf2.get_v_range().clamp(sol.w);
-					/*if (inverse_direction)
-						break;
-					inverse_direction = true;
-					continue;*/
-					should_change_direction = true;
-				}
-			}
-
-			/*	if (!surf1.get_u_range().contains(sol.x) || !surf1.get_v_range().contains(sol.y) || !surf2.get_u_range().contains(sol.z) || !surf2.get_v_range().contains(sol.w))
-				{
-					if (inverse_direction)
-						break;
-					inverse_direction = true;
-					continue;
-				}*/
-
-				// check singular points
-			if (uvs1.size() >= 2)
-			{
-				const auto pprev_uv1 = inverse_direction ? *(++uvs1.cbegin()) : *(++uvs1.crbegin());
-				const auto pprev_uv2 = inverse_direction ? *(++uvs2.cbegin()) : *(++uvs2.crbegin());
-				if ((surf1.evaluate(pprev_uv1.x, pprev_uv1.y) - surf1.evaluate(sol.x, sol.y)).length() < 0.5f * step && (surf2.evaluate(pprev_uv2.x, pprev_uv2.y) - surf2.evaluate(sol.z, sol.w)).length() < 0.5f * step // points are near in world space
-					&& (pprev_uv1 - Vector2{ sol.x,sol.y }).length() < (pprev_uv1 - uv1).length() && (pprev_uv2 - Vector2{ sol.z,sol.w }).length() < (pprev_uv2 - uv2).length()) // points are near in parameter space
-				{
-					// Newton turned back -- passed through singular point
-					reverse_tangent_after_singular_point = !reverse_tangent_after_singular_point;
-					singular_point_crossed = true;
-					continue;
-				}
-			}
-
-			if (inverse_direction)
-			{
-				if ((surf1.evaluate(sol.x, sol.y) - surf1.evaluate(uvs1.back().x, uvs1.back().y)).length() < 0.5f * step)
-				{
-					looped = true;
-					break;
-				}
-				uvs1.push_front({ sol.x, sol.y });
-				uvs2.push_front({ sol.z, sol.w });
-			}
-			else
-			{
-				if ((surf1.evaluate(sol.x, sol.y) - surf1.evaluate(uvs1.front().x, uvs1.front().y)).length() < 0.5f * step)
-				{
-					looped = true;
-					break;
-				}
-				uvs1.push_back({ sol.x, sol.y });
-				uvs2.push_back({ sol.z, sol.w });
-			}
-
-			if (should_change_direction)
-			{
-				if (inverse_direction)
-					break;
-				inverse_direction = true;
-			}
-		}
-
-		return Object::create<IntersectionCurve>(surf1, surf2, uvs1, uvs2, looped, singular_point_crossed, uvs1.size() == max_steps);
+		return Object::create<IntersectionCurve>(surf1, surf2, ParametricSurfaceIntersection::intersect_surfaces_without_hint(surf1, surf2, step, max_steps, sample_count_x, sample_count_y, force_loop));
 	}
 
-	Vector2 IntersectionCurve::find_nearest_point(const ParametricSurface& surf, const Vector3& point)
+	std::list<Object::Handle<IntersectionCurve>> IntersectionCurve::find_many_intersections(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y, const bool force_loop)
 	{
-		return find_nearest_point(surf, point, { surf.get_u_range().middle(), surf.get_v_range().middle() });
-	}
-
-	Vector2 IntersectionCurve::find_nearest_point(const ParametricSurface& surf, const Vector3& point, const Vector2& uvstart)
-	{
-		static constexpr float EPS = 1e-6f;
-
-		// gradienty proste (TODO sprzê¿one)
-		Vector2 result = uvstart;
-		auto surf_point = surf.evaluate(result.x, result.y);
-		float fval = dot(surf_point - point, surf_point - point);
-		Vector2 grad = { 2.0f * dot(surf_point - point, surf.du(result.x, result.y)), 2.0f * dot(surf_point - point, surf.dv(result.x, result.y)) };
-		float alpha = 1.0f;
-		if (grad.length() < EPS)
-			return result;
-
-		const auto start_time = std::clock();
-
-		while (true)
-		{
-			check_timeout(start_time);
-
-			const auto new_result = result - alpha * grad;
-			if (!surf.get_u_range().contains(new_result.x) || !surf.get_v_range().contains(new_result.y))
-			{
-				alpha /= 2;
-				continue;
-			}
-			//new_result.x = surf.get_u_range().clamp(new_result.x);
-			//new_result.y = surf.get_v_range().clamp(new_result.y);
-			const auto old_surf_point = surf_point;
-			surf_point = surf.evaluate(new_result.x, new_result.y);
-			const float new_fval = dot(surf_point - point, surf_point - point);
-			const Vector2 new_grad = { 2.0f * dot(surf_point - point, surf.du(new_result.x, new_result.y)), 2.0f * dot(surf_point - point, surf.dv(new_result.x, new_result.y)) };
-			//if (grad.length() < EPS)
-			//if ((new_result - result).length() < EPS)
-			if ((surf_point - old_surf_point).length() < EPS)
-			{
-				result = new_result;
-				break;
-			}
-			if (new_fval >= fval)
-				alpha /= 2;
-			else
-			{
-				fval = new_fval;
-				result = new_result;
-				grad = new_grad;
-			}
-		}
+		auto intersections = ParametricSurfaceIntersection::find_many_intersections(surf1, surf2, step, max_steps, sample_count_x, sample_count_y, force_loop);
+		std::list<Object::Handle<IntersectionCurve>> result;
+		for (const auto& isec : intersections)
+			result.push_back(Object::create<IntersectionCurve>(surf1, surf2, isec));
 		return result;
-		//return { surf.get_u_range().clamp(result.x), surf.get_v_range().clamp(result.y) };
 	}
 
-	Vector2 IntersectionCurve::find_nearest_point_far_from(const ParametricSurface& surf, const Vector2& uv_far, float step)
+	Object::Handle<IntersectionCurve> IntersectionCurve::self_intersect_surface_with_hint(ParametricSurfaceObject& surf, float step, size_t max_steps, const Vector3& hint)
 	{
-		static constexpr int MAX_TRIES = 100;
-
-		static std::random_device dev;
-		std::uniform_real_distribution<float> random_u(surf.get_u_range().from, surf.get_u_range().to);
-		std::uniform_real_distribution<float> random_v(surf.get_v_range().from, surf.get_v_range().to);
-
-		const auto point_far = surf.evaluate(uv_far.x, uv_far.y);
-
-		for (int i = 0; i < MAX_TRIES; ++i)
-		{
-			const Vector2 uv = { random_u(dev), random_v(dev) };
-			const auto result = find_nearest_point(surf, point_far, uv);
-
-			const auto dist = (result - uv_far).length();
-			if (dist > 0.5f * step)
-				return result;
-		}
-		throw CommonIntersectionPointNotFoundException();
+		return Object::create<IntersectionCurve>(surf, surf, ParametricSurfaceIntersection::self_intersect_surface_with_hint(surf, step, max_steps, hint));
 	}
 
-	std::pair<Vector2, Vector2> IntersectionCurve::find_first_common_point(const ParametricSurface& surf1, const ParametricSurface& surf2, const Vector2& uv1start, const Vector2& uv2start)
+	Object::Handle<IntersectionCurve> IntersectionCurve::self_intersect_surface_without_hint(ParametricSurfaceObject& surf, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y)
 	{
-		static constexpr float EPS = 1e-6f;
-
-		// gradienty proste (TODO sprzê¿one)
-		Vector4 result = { uv1start.x, uv1start.y, uv2start.x, uv2start.y };
-		auto surf_point1 = surf1.evaluate(result.x, result.y),
-			surf_point2 = surf2.evaluate(result.z, result.w);
-		float fval = dot(surf_point1 - surf_point2, surf_point1 - surf_point2);
-		Vector4 grad = {
-			2.0f * dot(surf_point1 - surf_point2, surf1.du(result.x, result.y)),
-			2.0f * dot(surf_point1 - surf_point2, surf1.dv(result.x, result.y)),
-			-2.0f * dot(surf_point1 - surf_point2, surf2.du(result.z, result.w)),
-			-2.0f * dot(surf_point1 - surf_point2, surf2.dv(result.z, result.w)),
-		};
-		float alpha = 1.0f;
-		if (grad.length() < EPS)
-			return { {result.x, result.y}, {result.z, result.w} };
-
-		const auto start_time = std::clock();
-
-		while (true)
-		{
-			check_timeout(start_time);
-
-			const auto new_result = result - alpha * grad;
-			const auto old_surf_point1 = surf_point1, old_surf_point2 = surf_point2;
-			surf_point1 = surf1.evaluate(new_result.x, new_result.y);
-			surf_point2 = surf2.evaluate(new_result.z, new_result.w);
-			const float new_fval = dot(surf_point1 - surf_point2, surf_point1 - surf_point2);
-			const Vector4 new_grad = {
-				2.0f * dot(surf_point1 - surf_point2, surf1.du(result.x, result.y)),
-				2.0f * dot(surf_point1 - surf_point2, surf1.dv(result.x, result.y)),
-				-2.0f * dot(surf_point1 - surf_point2, surf2.du(result.z, result.w)),
-				-2.0f * dot(surf_point1 - surf_point2, surf2.dv(result.z, result.w)),
-			};
-			//if (grad.length() < EPS)
-			auto dif = new_result - result;
-			float l = dif.length();
-			//if ((new_result - result).length() < EPS)
-			if ((old_surf_point1 - surf_point1).length() + (old_surf_point2 - surf_point2).length() < EPS)
-			{
-				result = new_result;
-				break;
-			}
-			if (new_fval >= fval)
-				alpha /= 2;
-			else
-			{
-				fval = new_fval;
-				result = new_result;
-				grad = new_grad;
-			}
-		}
-
-		// wrap arguments
-		if (surf1.u_wraps_at_v(result.y))
-			result.x = surf1.get_u_range().wrap(result.x);
-		if (surf1.v_wraps_at_u(result.x))
-			result.y = surf1.get_v_range().wrap(result.y);
-		if (surf2.u_wraps_at_v(result.w))
-			result.z = surf2.get_u_range().wrap(result.z);
-		if (surf2.v_wraps_at_u(result.z))
-			result.w = surf2.get_v_range().wrap(result.w);
-
-		return { {result.x, result.y}, {result.z, result.w} };
-	}
-
-	std::pair<Vector2, Vector2> IntersectionCurve::find_first_common_point(const ParametricSurface& surf1, const ParametricSurface& surf2, const Vector3& hint)
-	{
-		auto nearest1 = find_nearest_point(surf1, hint);
-		auto nearest2 = find_nearest_point(surf2, hint);
-
-		return find_first_common_point(surf1, surf2, nearest1, nearest2);
-	}
-
-	std::pair<Vector2, Vector2> IntersectionCurve::find_first_common_point_on_self_intersection(const ParametricSurface& surf, const Vector3& hint, float step)
-	{
-		const auto uv1 = find_nearest_point(surf, hint);
-		const auto uv2 = find_nearest_point_far_from(surf, uv1, step);
-
-		return find_first_common_point(surf, surf, uv1, uv2);
-	}
-
-	Object::Handle<IntersectionCurve> IntersectionCurve::intersect_surfaces_with_hint(ParametricSurface& surf1, ParametricSurface& surf2, float step, size_t max_steps, const Vector3& hint)
-	{
-		auto start = find_first_common_point(surf1, surf2, hint);
-		return intersect_surfaces(surf1, surf2, step, max_steps, start.first, start.second);
-	}
-
-	Object::Handle<IntersectionCurve> IntersectionCurve::intersect_surfaces_without_hint(ParametricSurface& surf1, ParametricSurface& surf2, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y)
-	{
-		Vector2 uv1min, uv2min;
-		auto urange1 = surf1.get_u_range(), vrange1 = surf1.get_v_range(),
-			urange2 = surf2.get_u_range(), vrange2 = surf2.get_v_range();
-		float dmin = INFINITY;
-		for (int i1 = 0; i1 < sample_count_x; ++i1)
-			for (int j1 = 0; j1 < sample_count_y; ++j1)
-				for (int i2 = 0; i2 < sample_count_x; ++i2)
-					for (int j2 = 0; j2 < sample_count_y; ++j2)
-					{
-						const float u1 = urange1.from + i1 * (urange1.to - urange1.from) / (sample_count_x - 1),
-							v1 = vrange1.from + j1 * (vrange1.to - vrange1.from) / (sample_count_y - 1),
-							u2 = urange2.from + i2 * (urange2.to - urange2.from) / (sample_count_x - 1),
-							v2 = vrange2.from + j2 * (vrange2.to - vrange2.from) / (sample_count_y - 1);
-						const float d = (surf1.evaluate(u1, v1) - surf2.evaluate(u2, v2)).length();
-						if (d < dmin)
-						{
-							dmin = d;
-							uv1min = { u1,v1 };
-							uv2min = { u2,v2 };
-						}
-					}
-
-		auto start = find_first_common_point(surf1, surf2, uv1min, uv2min);
-		return intersect_surfaces(surf1, surf2, step, max_steps, start.first, start.second);
-	}
-
-	Object::Handle<IntersectionCurve> IntersectionCurve::self_intersect_surface_with_hint(ParametricSurface& surf, float step, size_t max_steps, const Vector3& hint)
-	{
-		auto start = find_first_common_point_on_self_intersection(surf, hint, step);
-		return intersect_surfaces(surf, surf, step, max_steps, start.first, start.second);
-	}
-
-	Object::Handle<IntersectionCurve> IntersectionCurve::self_intersect_surface_without_hint(ParametricSurface& surf, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y)
-	{
-		Vector2 uv1min, uv2min;
-		auto urange = surf.get_u_range(), vrange = surf.get_v_range();
-		float dmin = INFINITY;
-		for (int i1 = 0; i1 < sample_count_x; ++i1)
-			for (int j1 = 0; j1 < sample_count_y; ++j1)
-				for (int i2 = 0; i2 < sample_count_x; ++i2)
-					for (int j2 = 0; j2 < sample_count_y; ++j2)
-					{
-						const float ustep = (urange.to - urange.from) / sample_count_x, vstep = (vrange.to - vrange.from) / sample_count_y;
-						const float u1 = (i1 + 0.5f) * ustep, v1 = (j1 + 0.5f) * vstep,
-							u2 = (i2 + 0.5f) * ustep, v2 = (j2 + 0.5f) * vstep;
-						/*const float u1 = urange.from + i1 * (urange.to - urange.from) / (sample_count_x - 1),
-							v1 = vrange.from + j1 * (vrange.to - vrange.from) / (sample_count_y - 1),
-							u2 = urange.from + i2 * (urange.to - urange.from) / (sample_count_x - 1),
-							v2 = vrange.from + j2 * (vrange.to - vrange.from) / (sample_count_y - 1);*/
-						if ((u1 - u2) * (u1 - u2) + (v1 - v2) * (v1 - v2) < 0.25 * step * step)
-							continue;
-						const float d = (surf.evaluate(u1, v1) - surf.evaluate(u2, v2)).length();
-						if (d < dmin)
-						{
-							dmin = d;
-							uv1min = { u1,v1 };
-							uv2min = { u2,v2 };
-						}
-					}
-
-		if (!isfinite(dmin))
-			throw CommonIntersectionPointNotFoundException();
-		auto start = find_first_common_point(surf, surf, uv1min, uv2min);
-		if ((start.first - start.second).length() < 0.5f * step)
-			throw CommonIntersectionPointNotFoundException();
-		return intersect_surfaces(surf, surf, step, max_steps, start.first, start.second);
+		return Object::create<IntersectionCurve>(surf, surf, ParametricSurfaceIntersection::self_intersect_surface_without_hint(surf, step, max_steps, sample_count_x, sample_count_y));
 	}
 
 	std::vector<ObjectHandle> IntersectionCurve::clone() const

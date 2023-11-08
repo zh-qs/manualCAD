@@ -14,6 +14,7 @@ namespace ManualCAD
 
 		Cutter(float diameter) : radius(0.5f * diameter) {}
 		float get_diameter() const { return 2.0f * radius; }
+		float get_radius() const { return radius; }
 
 		void cut_pixel(HeightMap& height_map, int instruction_number, int x, int y, float height, float max_depth) const;
 		virtual void cut_pixel_virtual(HeightMap& height_map, int instruction_number, int x, int y, float height, float max_depth) const = 0;

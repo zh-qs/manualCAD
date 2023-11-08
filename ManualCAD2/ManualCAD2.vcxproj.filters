@@ -70,6 +70,9 @@
     <Filter Include="Pliki źródłowe\milling\objects">
       <UniqueIdentifier>{99852495-7e68-4790-8e49-da9274e51c0f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pliki źródłowe\milling\paths\path_generation">
+      <UniqueIdentifier>{3fd67332-c863-42cb-9a31-265c42213e85}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -209,6 +212,21 @@
     </ClCompile>
     <ClCompile Include="prototype.cpp">
       <Filter>Pliki źródłowe\milling\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="polygon_envelope.cpp">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClCompile>
+    <ClCompile Include="parametric_surface_intersection.cpp">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="zig_zag_path.cpp">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClCompile>
+    <ClCompile Include="surface_path.cpp">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClCompile>
+    <ClCompile Include="rough_path.cpp">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -377,6 +395,39 @@
     <ClInclude Include="box.h">
       <Filter>Pliki źródłowe\maths</Filter>
     </ClInclude>
+    <ClInclude Include="polygon_envelope.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="segment_bin_array.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="parametric_surface.h">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="parametric_surface_intersection.h">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="constant_parameter.h">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="plane_xz.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="zig_zag_path.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="planimetrics.h">
+      <Filter>Pliki źródłowe\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="rough_path.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="offset_surface.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="surface_path.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\bin\glfw3.dll" />
@@ -459,6 +510,9 @@
       <Filter>Pliki źródłowe\shaders</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="workpiece_vertex_shader_g.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="height_map_fragment_shader.glsl">
       <Filter>Pliki źródłowe\shaders</Filter>
     </CopyFileToFolders>
   </ItemGroup>

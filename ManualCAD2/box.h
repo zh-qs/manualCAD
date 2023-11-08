@@ -29,6 +29,23 @@ namespace ManualCAD
 			z_max = std::max(box.z_max, z_max);
 		}
 
+		inline void intersect_with(const Box& box)
+		{
+			x_min = std::max(box.x_min, x_min);
+			x_max = std::min(box.x_max, x_max);
+			y_min = std::max(box.y_min, y_min);
+			y_max = std::min(box.y_max, y_max);
+			z_min = std::max(box.z_min, z_min);
+			z_max = std::min(box.z_max, z_max);
+		}
+
+		inline bool is_empty() const
+		{
+			return x_max < x_min
+				|| y_max < y_min
+				|| z_max < z_min;
+		}
+
 		inline void offset_by(const Vector3& off)
 		{
 			x_min -= off.x;
@@ -62,5 +79,23 @@ namespace ManualCAD
 			const float inf = INFINITY;
 			return { inf,-inf,inf,-inf,inf,-inf };
 		}
+
+		static inline Box intersect(const Box& b1, const Box& b2)
+		{
+			Box box;
+			box.x_min = std::max(b1.x_min, b2.x_min);
+			box.x_max = std::min(b1.x_max, b2.x_max);
+			box.y_min = std::max(b1.y_min, b2.y_min);
+			box.y_max = std::min(b1.y_max, b2.y_max);
+			box.z_min = std::max(b1.z_min, b2.z_min);
+			box.z_max = std::min(b1.z_max, b2.z_max);
+			return box;
+		}
+	};
+
+	template <class T>
+	struct RangedBox {
+		Box box;
+		Range<float> us, vs;
 	};
 }

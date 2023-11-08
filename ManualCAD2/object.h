@@ -5,6 +5,7 @@
 #include "application_settings.h"
 #include "cursor.h"
 #include "line.h"
+#include "parametric_surface.h"
 #include <string>
 #include <memory>
 #include <list>
@@ -16,6 +17,8 @@
 #include "graph.h"
 #include "toggling_texture.h"
 #include "box.h"
+#include "constant_parameter.h"
+#include "parametric_surface_intersection.h"
 
 namespace ManualCAD
 {
@@ -136,14 +139,12 @@ namespace ManualCAD
 
 	class IntersectionCurve;
 
-	class ParametricSurface : public Object {
-		static constexpr float EPS = 1e-6f;
-
+	class ParametricSurfaceObject : public Object, public ParametricSurfaceWithSecondDerivative {
 	public:
 		//std::list<IntersectionCurve*> intersection_curves;
 		TogglingTexture trim_texture;
 
-		ParametricSurface(Renderable& renderable) : Object(renderable), trim_texture(ApplicationSettings::TRIM_TEXTURE_SIZE_PIXELS, ApplicationSettings::TRIM_TEXTURE_SIZE_PIXELS, *this) {}
+		ParametricSurfaceObject(Renderable& renderable) : Object(renderable), trim_texture(ApplicationSettings::TRIM_TEXTURE_SIZE_PIXELS, ApplicationSettings::TRIM_TEXTURE_SIZE_PIXELS, *this) {}
 
 		//void add_intersection(IntersectionCurve& curve) { 
 		//	//intersection_curves.push_back(&curve);
@@ -153,26 +154,6 @@ namespace ManualCAD
 		//	//intersection_curves.remove(&curve); 
 		//	trim_texture.remove_line(curve.get_uvs_line_for(*this));
 		//}
-
-		virtual Range<float> get_u_range() const = 0;
-		virtual Range<float> get_v_range() const = 0;
-
-		virtual Vector3 evaluate(float u, float v) const = 0;
-		virtual Vector3 normal(float u, float v) const = 0;
-		virtual Vector3 du(float u, float v) const = 0;
-		virtual Vector3 dv(float u, float v) const = 0;
-
-		virtual Box get_bounding_box() const = 0;
-
-		bool v_wraps_at_u(float u) const {
-			auto vrange = get_v_range();
-			return (evaluate(u, vrange.from) - evaluate(u, vrange.to)).length() < EPS;
-		}
-		bool u_wraps_at_v(float v) const {
-			auto urange = get_u_range();
-			//auto v1 = evaluate(urange.from, v), v2 = evaluate(urange.to, v), v3 = v1 - v2;
-			return (evaluate(urange.from, v) - evaluate(urange.to, v)).length() < EPS;
-		}
 	};
 
 	class ObjectCollection : public MouseTrackable {
@@ -305,7 +286,7 @@ namespace ManualCAD
 		}
 	};
 
-	class Torus : public ParametricSurface {
+	class Torus : public ParametricSurfaceObject {
 		friend class ObjectSettings;
 		friend class Serializer;
 
@@ -320,7 +301,7 @@ namespace ManualCAD
 		void generate_renderable() override;
 		void build_specific_settings(ObjectSettingsWindow& parent) override;
 	public:
-		Torus() : mesh(trim_texture.get_texture()), ParametricSurface(mesh) {
+		Torus() : mesh(trim_texture.get_texture()), ParametricSurfaceObject(mesh) {
 			name = "Torus " + std::to_string(counter++);
 		}
 		void bind_with(Object& object) override {}
@@ -358,8 +339,30 @@ namespace ManualCAD
 			return (transformation.get_matrix() * local).xyz();
 		}
 
+		Vector3 duu(float u, float v) const override {
+			const float cosu = cosf(u);
+			const Vector4 local = { -small_radius * cosf(v) * cosu, -small_radius * sinf(u), -small_radius * sinf(v) * cosu, 0.0f };
+			return (transformation.get_matrix() * local).xyz();
+		}
+
+		Vector3 duv(float u, float v) const override {
+			const float sinu = sinf(u);
+			const Vector4 local = { small_radius * sinf(v) * sinu, 0.0f, -small_radius * cosf(v) * sinu, 0.0f };
+			return (transformation.get_matrix() * local).xyz();
+		}
+
+		Vector3 dvv(float u, float v) const override {
+			const float Rrcos = large_radius + small_radius * cosf(u);
+			const Vector4 local = { -Rrcos * cosf(v), 0.0f, -Rrcos * sinf(v), 0.0f };
+			return (transformation.get_matrix() * local).xyz();
+		}
+
 		Box get_bounding_box() const override {
 			return Box::degenerate(); // TODO
+		}
+
+		std::vector<RangedBox<float>> get_patch_bounds() const override {
+			return { {get_bounding_box(), get_u_range(), get_v_range()} };
 		}
 
 		std::vector<ObjectHandle> clone() const override;
@@ -588,7 +591,7 @@ namespace ManualCAD
 		static PatchEdge from_surface_array(const std::vector<Point*>& points, Object& patch, int idx_from, int step_to, int step_second);
 	};
 
-	class BicubicC0BezierSurface : public ParametricSurface {
+	class BicubicC0BezierSurface : public ParametricSurfaceObject {
 		friend class ObjectSettings;
 		friend class Serializer;
 
@@ -604,10 +607,12 @@ namespace ManualCAD
 
 		void generate_renderable() override;
 		void build_specific_settings(ObjectSettingsWindow& parent) override;
+
+		void decompose_uv(float u, float v, float& uu, float& vv, int& ui, int& vi) const;
 	public:
 		Vector4 contour_color = { 1.0f,1.0f,1.0f,1.0f };
 
-		BicubicC0BezierSurface(const std::vector<Point*>& points, int patches_x, int patches_y, bool cylinder) : surf(&trim_texture.get_texture()), ParametricSurface(surf), points(points), patches_x(patches_x), patches_y(patches_y), cylinder(cylinder) {
+		BicubicC0BezierSurface(const std::vector<Point*>& points, int patches_x, int patches_y, bool cylinder) : surf(&trim_texture.get_texture()), ParametricSurfaceObject(surf), points(points), patches_x(patches_x), patches_y(patches_y), cylinder(cylinder) {
 			name = "Bezier C0 surface " + std::to_string(counter++);
 			transformable = false;
 			for (auto* p : points)
@@ -640,6 +645,9 @@ namespace ManualCAD
 		Vector3 normal(float u, float v) const override;
 		Vector3 du(float u, float v) const override;
 		Vector3 dv(float u, float v) const override;
+		Vector3 duu(float u, float v) const override;
+		Vector3 duv(float u, float v) const override;
+		Vector3 dvv(float u, float v) const override;
 
 		Box get_bounding_box() const override {
 			Box box = Box::degenerate();
@@ -647,6 +655,8 @@ namespace ManualCAD
 				box.add(p->transformation.position);
 			return box;
 		}
+
+		std::vector<RangedBox<float>> get_patch_bounds() const override;
 
 		std::vector<ObjectHandle> clone() const override;
 
@@ -690,7 +700,7 @@ namespace ManualCAD
 		std::vector<ObjectHandle> clone() const override;
 	};
 
-	class BicubicC2BezierSurface : public ParametricSurface {
+	class BicubicC2BezierSurface : public ParametricSurfaceObject {
 		friend class ObjectSettings;
 		friend class Serializer;
 
@@ -706,10 +716,12 @@ namespace ManualCAD
 
 		void generate_renderable() override;
 		void build_specific_settings(ObjectSettingsWindow& parent) override;
+
+		void decompose_uv(float u, float v, float& uu, float& vv, int& ui, int& vi) const;
 	public:
 		Vector4 contour_color = { 1.0f,1.0f,1.0f,1.0f };
 
-		BicubicC2BezierSurface(const std::vector<Point*>& points, int patches_x, int patches_y, bool cylinder) : surf(&trim_texture.get_texture()), ParametricSurface(surf), points(points), patches_x(patches_x), patches_y(patches_y), cylinder(cylinder) {
+		BicubicC2BezierSurface(const std::vector<Point*>& points, int patches_x, int patches_y, bool cylinder) : surf(&trim_texture.get_texture()), ParametricSurfaceObject(surf), points(points), patches_x(patches_x), patches_y(patches_y), cylinder(cylinder) {
 			name = "Bezier C2 surface " + std::to_string(counter++);
 			transformable = false;
 			for (auto& p : points)
@@ -741,6 +753,9 @@ namespace ManualCAD
 		Vector3 normal(float u, float v) const override;
 		Vector3 du(float u, float v) const override;
 		Vector3 dv(float u, float v) const override;
+		Vector3 duu(float u, float v) const override;
+		Vector3 duv(float u, float v) const override;
+		Vector3 dvv(float u, float v) const override;
 
 		Box get_bounding_box() const override {
 			Box box = Box::degenerate();
@@ -748,6 +763,8 @@ namespace ManualCAD
 				box.add(p->transformation.position);
 			return box; // TODO maybe we can make smaller box?
 		}
+
+		std::vector<RangedBox<float>> get_patch_bounds() const override;
 
 		std::vector<ObjectHandle> clone() const override;
 	};
@@ -868,8 +885,8 @@ namespace ManualCAD
 
 		static int counter;
 
-		ParametricSurface& surf1;
-		ParametricSurface& surf2;
+		ParametricSurfaceObject& surf1;
+		ParametricSurfaceObject& surf2;
 		std::vector<Vector2> uvs1;
 		std::vector<Vector2> uvs2;
 
@@ -883,47 +900,77 @@ namespace ManualCAD
 		void build_specific_settings(ObjectSettingsWindow& parent) override;
 
 	public:
-		IntersectionCurve(ParametricSurface& surf1, ParametricSurface& surf2, const std::list<Vector2>& uvs1, const std::list<Vector2>& uvs2, bool looped = false, bool singular_crossed = false, bool too_short = false)
-			: Object(line), surf1(surf1), surf2(surf2), uvs1(uvs1.begin(), uvs1.end()), uvs2(uvs2.begin(), uvs2.end()), uvs1_line(surf1.get_u_range(), surf1.get_v_range()), uvs2_line(surf2.get_u_range(), surf2.get_v_range()), singular_crossed(singular_crossed), too_short(too_short) {
+		IntersectionCurve(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, const ParametricSurfaceIntersection& i)
+			: Object(line), surf1(surf1), surf2(surf2), uvs1(i.get_uvs1()), uvs2(i.get_uvs2()), uvs1_line(surf1.get_u_range(), surf1.get_v_range()), uvs2_line(surf2.get_u_range(), surf2.get_v_range()), singular_crossed(i.is_singular_crossed()), too_short(i.is_too_short()) {
 			name = "Intersection curve " + std::to_string(counter++);
 			transformable = false;
-			line.looped = looped;
+			line.looped = i.is_looped();
 			// intersection curve is generated only once (it is static), so we do not intend to add any observers or persistence bindings
 
 			uvs1_line.set_data(this->uvs1);
 			uvs2_line.set_data(this->uvs2);
 			uvs1_line.color = uvs2_line.color = { 1.0f,1.0f,1.0f,1.0f };
-			uvs1_line.looped = uvs2_line.looped = looped;
+			uvs1_line.looped = uvs2_line.looped = i.is_looped();
 			surf1.trim_texture.add_line(uvs1_line);
 			surf2.trim_texture.add_line(uvs2_line);
 		}
 
-		IntersectionCurve(ParametricSurface& surf1, ParametricSurface& surf2, std::vector<Vector2>&& uvs1, std::vector<Vector2>&& uvs2, bool looped = false, bool singular_crossed = false)
-			: Object(line), surf1(surf1), surf2(surf2), uvs1(std::move(uvs1)), uvs2(std::move(uvs2)), uvs1_line(surf1.get_u_range(), surf1.get_v_range()), uvs2_line(surf2.get_u_range(), surf2.get_v_range()), singular_crossed(singular_crossed) {
+		IntersectionCurve(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, ParametricSurfaceIntersection&& i)
+			: Object(line), surf1(surf1), surf2(surf2), uvs1(i.get_uvs1()), uvs2(i.get_uvs2()), uvs1_line(surf1.get_u_range(), surf1.get_v_range()), uvs2_line(surf2.get_u_range(), surf2.get_v_range()), singular_crossed(i.is_singular_crossed()), too_short(i.is_too_short()) {
 			name = "Intersection curve " + std::to_string(counter++);
 			transformable = false;
-			line.looped = looped;
+			line.looped = i.is_looped();
 			// intersection curve is generated only once (it is static), so we do not intend to add any observers or persistence bindings
 
 			uvs1_line.set_data(this->uvs1);
 			uvs2_line.set_data(this->uvs2);
 			uvs1_line.color = uvs2_line.color = { 1.0f,1.0f,1.0f,1.0f };
-			uvs1_line.looped = uvs2_line.looped = looped;
+			uvs1_line.looped = uvs2_line.looped = i.is_looped();
 			surf1.trim_texture.add_line(uvs1_line);
 			surf2.trim_texture.add_line(uvs2_line);
 		}
+
+		//IntersectionCurve(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, const std::list<Vector2>& uvs1, const std::list<Vector2>& uvs2, bool looped = false, bool singular_crossed = false, bool too_short = false)
+		//	: Object(line), surf1(surf1), surf2(surf2), uvs1(uvs1.begin(), uvs1.end()), uvs2(uvs2.begin(), uvs2.end()), uvs1_line(surf1.get_u_range(), surf1.get_v_range()), uvs2_line(surf2.get_u_range(), surf2.get_v_range()), singular_crossed(singular_crossed), too_short(too_short) {
+		//	name = "Intersection curve " + std::to_string(counter++);
+		//	transformable = false;
+		//	line.looped = looped;
+		//	// intersection curve is generated only once (it is static), so we do not intend to add any observers or persistence bindings
+
+		//	uvs1_line.set_data(this->uvs1);
+		//	uvs2_line.set_data(this->uvs2);
+		//	uvs1_line.color = uvs2_line.color = { 1.0f,1.0f,1.0f,1.0f };
+		//	uvs1_line.looped = uvs2_line.looped = looped;
+		//	surf1.trim_texture.add_line(uvs1_line);
+		//	surf2.trim_texture.add_line(uvs2_line);
+		//}
+
+		//IntersectionCurve(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, std::vector<Vector2>&& uvs1, std::vector<Vector2>&& uvs2, bool looped = false, bool singular_crossed = false, bool too_short = false)
+		//	: Object(line), surf1(surf1), surf2(surf2), uvs1(std::move(uvs1)), uvs2(std::move(uvs2)), uvs1_line(surf1.get_u_range(), surf1.get_v_range()), uvs2_line(surf2.get_u_range(), surf2.get_v_range()), singular_crossed(singular_crossed), too_short(too_short) {
+		//	name = "Intersection curve " + std::to_string(counter++);
+		//	transformable = false;
+		//	line.looped = looped;
+		//	// intersection curve is generated only once (it is static), so we do not intend to add any observers or persistence bindings
+
+		//	uvs1_line.set_data(this->uvs1);
+		//	uvs2_line.set_data(this->uvs2);
+		//	uvs1_line.color = uvs2_line.color = { 1.0f,1.0f,1.0f,1.0f };
+		//	uvs1_line.looped = uvs2_line.looped = looped;
+		//	surf1.trim_texture.add_line(uvs1_line);
+		//	surf2.trim_texture.add_line(uvs2_line);
+		//}
 
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {};
 
-		Line2D& get_uvs_line_for(const ParametricSurface& surf) { return &surf == &surf1 ? uvs1_line : uvs2_line; }
+		Line2D& get_uvs_line_for(const ParametricSurfaceObject& surf) { return &surf == &surf1 ? uvs1_line : uvs2_line; }
 
 		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 
 		void replace_child_by(Object& child, Object& other) override {}
 
-		void on_delete() override { 
+		void on_delete() override {
 			surf1.trim_texture.remove_line(uvs1_line);
 			surf2.trim_texture.remove_line(uvs2_line);
 		}
@@ -931,16 +978,17 @@ namespace ManualCAD
 		std::pair<std::vector<Object::Handle<Point>>, Object::Handle<InterpolationSpline>> to_spline() const;
 		std::vector<ObjectHandle> clone() const override;
 
-		static Object::Handle<IntersectionCurve> intersect_surfaces(ParametricSurface& surf1, ParametricSurface& surf2, float step, size_t max_steps, const Vector2& uv1start, const Vector2& uv2start);
-		static Vector2 find_nearest_point(const ParametricSurface& surf, const Vector3& point);
-		static Vector2 find_nearest_point(const ParametricSurface& surf, const Vector3& point, const Vector2& uvstart);
-		static Vector2 find_nearest_point_far_from(const ParametricSurface& surf, const Vector2& uv_far, float step);
-		static std::pair<Vector2, Vector2> find_first_common_point(const ParametricSurface& surf1, const ParametricSurface& surf2, const Vector2& uv1start, const Vector2& uv2start);
-		static std::pair<Vector2, Vector2> find_first_common_point(const ParametricSurface& surf1, const ParametricSurface& surf2, const Vector3& hint);
-		static std::pair<Vector2, Vector2> find_first_common_point_on_self_intersection(const ParametricSurface& surf, const Vector3& hint, float step);
-		static Object::Handle<IntersectionCurve> intersect_surfaces_with_hint(ParametricSurface& surf1, ParametricSurface& surf2, float step, size_t max_steps, const Vector3& hint);
-		static Object::Handle<IntersectionCurve> intersect_surfaces_without_hint(ParametricSurface& surf1, ParametricSurface& surf2, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y);
-		static Object::Handle<IntersectionCurve> self_intersect_surface_with_hint(ParametricSurface& surf, float step, size_t max_steps, const Vector3& hint);
-		static Object::Handle<IntersectionCurve> self_intersect_surface_without_hint(ParametricSurface& surf, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y);
+		//static Object::Handle<IntersectionCurve> intersect_surfaces(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, float step, size_t max_steps, const Vector2& uv1start, const Vector2& uv2start, const bool force_loop);
+		//static Vector2 find_nearest_point(const ParametricSurfaceObject& surf, const Vector3& point);
+		//static Vector2 find_nearest_point(const ParametricSurfaceObject& surf, const Vector3& point, const Vector2& uvstart, const ConstantParameter is_constant = ConstantParameter::None);
+		//static Vector2 find_nearest_point_far_from(const ParametricSurfaceObject& surf, const Vector2& uv_far, float step);
+		//static std::pair<Vector2, Vector2> find_first_common_point(const ParametricSurfaceObject& surf1, const ParametricSurfaceObject& surf2, const Vector2& uv1start, const Vector2& uv2start);
+		//static std::pair<Vector2, Vector2> find_first_common_point(const ParametricSurfaceObject& surf1, const ParametricSurfaceObject& surf2, const Vector3& hint);
+		//static std::pair<Vector2, Vector2> find_first_common_point_on_self_intersection(const ParametricSurfaceObject& surf, const Vector3& hint, float step);
+		static Object::Handle<IntersectionCurve> intersect_surfaces_with_hint(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, float step, size_t max_steps, const Vector3& hint, const bool force_loop = false);
+		static Object::Handle<IntersectionCurve> intersect_surfaces_without_hint(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y, const bool force_loop = false);
+		static std::list<Object::Handle<IntersectionCurve>> find_many_intersections(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y, const bool force_loop = false);
+		static Object::Handle<IntersectionCurve> self_intersect_surface_with_hint(ParametricSurfaceObject& surf, float step, size_t max_steps, const Vector3& hint);
+		static Object::Handle<IntersectionCurve> self_intersect_surface_without_hint(ParametricSurfaceObject& surf, float step, size_t max_steps, size_t sample_count_x, size_t sample_count_y);
 	};
 }

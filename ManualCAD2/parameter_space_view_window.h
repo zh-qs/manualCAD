@@ -9,7 +9,7 @@ namespace ManualCAD
 {
 	class ParameterSpaceViewWindow : public Window
 	{
-		ParametricSurface* surface = nullptr;
+		ParametricSurfaceObject* surface = nullptr;
 		Renderer& renderer;
 		//FrameBuffer fbo;
 		//Texture texture;
@@ -25,7 +25,7 @@ namespace ManualCAD
 			fbo.unbind();*/
 		}
 		void build() override;
-		void show_surface(ParametricSurface& surf)
+		void show_surface(ParametricSurfaceObject& surf)
 		{
 			surface = &surf;
 			visible = true;

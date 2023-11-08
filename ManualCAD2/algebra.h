@@ -161,6 +161,7 @@ namespace ManualCAD
 
 	float dot(const Vector4& vec1, const Vector4& vec2);
 	float dot(const Vector3& vec1, const Vector3& vec2);
+	float dot(const Vector2& vec1, const Vector2& vec2);
 
 	Vector3 cross(const Vector3& vec1, const Vector3& vec2);
 
@@ -176,6 +177,11 @@ namespace ManualCAD
 	bool operator!=(const Vector3& vec1, const Vector3& vec2);
 
 	Vector3 operator*(const Matrix3x3& mat, const Vector3& vec);
+
+	float cross_sign(const Vector2& vec1, const Vector2& vec2);
+	Vector2 normalize(const Vector2& vec);
+	Vector2 max(const Vector2& vec1, const Vector2& vec2);
+	Vector2 min(const Vector2& vec1, const Vector2& vec2);
 
 	Vector2 operator+(const Vector2& vec1, const Vector2& vec2);
 	Vector2 operator-(const Vector2& vec1, const Vector2& vec2);

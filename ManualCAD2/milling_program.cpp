@@ -307,7 +307,7 @@ namespace ManualCAD
 		points.reserve(moves.size() + 1);
 		points.push_back({ moves.front().origin.x, moves.front().origin.z + 0.01f, moves.front().origin.y });
 		for (auto& move : moves)
-			points.push_back({ move.destination.x, move.destination.z + 0.01f , move.destination.y });
+			points.push_back({ move.destination.x, move.destination.z + 0.01f, move.destination.y });
 		return points;
 	}
 

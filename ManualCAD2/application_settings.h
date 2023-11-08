@@ -57,6 +57,6 @@ namespace ManualCAD
 		static constexpr bool BREAK_ON_TIMEOUT = true;
 		static constexpr std::clock_t COMPUTATION_TIMEOUT = 3 * CLOCKS_PER_SEC;
 
-		static constexpr bool DEBUG = false;
+		static constexpr bool DEBUG = true;
 	};
 }

@@ -10,7 +10,7 @@
 
 namespace ManualCAD
 {
-	class ParametricSurface;
+	class ParametricSurfaceObject;
 	class TogglingTexture
 	{
 		FrameBuffer fbo;
@@ -18,9 +18,9 @@ namespace ManualCAD
 		int tex_width = 0, tex_height = 0;
 		bool valid = false;
 		std::list<const Line2D*> lines;
-		const ParametricSurface& surf;
+		const ParametricSurfaceObject& surf;
 	public:
-		TogglingTexture(int width, int height, const ParametricSurface& surf) : tex_width(width), tex_height(height), surf(surf)
+		TogglingTexture(int width, int height, const ParametricSurfaceObject& surf) : tex_width(width), tex_height(height), surf(surf)
 		{
 			fbo.init();
 			fbo.bind();

@@ -8,7 +8,7 @@
 #include <iterator>
 
 namespace ManualCAD {
-	template <class TVert, class TEdgeWeight>
+	template <class TVert, class TEdgeWeight, bool DIRECTED = false>
 	class Graph {
 		using vertex_t = int;
 		using EdgeInfo = std::pair<vertex_t, TEdgeWeight>;
@@ -40,7 +40,11 @@ namespace ManualCAD {
 			}
 			return search->second;
 		}
-		void add_edge(vertex_t from, vertex_t to, const TEdgeWeight& weight) { neighbors[from].insert(std::pair(to, weight)); neighbors[to].insert(std::pair(from, reverse(weight))); }
+		void add_edge(vertex_t from, vertex_t to, const TEdgeWeight& weight) { 
+			neighbors[from].insert(std::pair(to, weight)); 
+			if constexpr (DIRECTED)
+				neighbors[to].insert(std::pair(from, reverse(weight))); 
+		}
 		void add_edge(const TVert& from, const TVert& to, const TEdgeWeight& weight) {
 			auto from_num = add_vertex(from);
 			auto to_num = add_vertex(to);

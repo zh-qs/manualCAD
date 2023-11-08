@@ -95,7 +95,7 @@ namespace ManualCAD
 	template <class T, template <class P> class Container>
 	std::optional<T*> try_create_object_from_surfaces(ObjectController& controller, bool& not_surf)
 	{
-		using SurfT = const ParametricSurface*;
+		using SurfT = const ParametricSurfaceObject*;
 		auto& selected = controller.get_selected_objects();
 		Container<SurfT> surfs;
 		if constexpr (std::is_same_v<Container<SurfT>, std::vector<SurfT>>)
@@ -197,17 +197,19 @@ namespace ManualCAD
 		float intersection_step_length = ApplicationSettings::INTERSECTION_STEP_DEFAULT_LENGTH;
 		int intersection_max_steps = ApplicationSettings::INTERSECTION_DEFAULT_MAX_STEPS;
 		bool intersection_cursor_hint = false;
+		bool find_all_intersections = false;
 		int intersection_sample_count = 10;
 
 		void load_model_from_file();
 		void save_model_to_file();
 
-		std::pair<ParametricSurface*, ParametricSurface*> try_get_surfaces_from_selection(bool& invalid_selection_count, bool& not_surface);
-		void try_add_intersection_curve_with_cursor_hint(ParametricSurface& surf1, ParametricSurface& surf2, bool& not_intersect, bool& timeout);
-		void try_add_intersection_curve_without_hint(ParametricSurface& surf1, ParametricSurface& surf2, bool& not_intersect, bool& timeout);
+		std::pair<ParametricSurfaceObject*, ParametricSurfaceObject*> try_get_surfaces_from_selection(bool& invalid_selection_count, bool& not_surface);
+		void try_add_all_intersection_curves(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, bool& not_intersect, bool& timeout);
+		void try_add_intersection_curve_with_cursor_hint(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, bool& not_intersect, bool& timeout);
+		void try_add_intersection_curve_without_hint(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, bool& not_intersect, bool& timeout);
 
-		void try_add_self_intersection_curve_with_cursor_hint(ParametricSurface& surf, bool& not_intersect, bool& timeout);
-		void try_add_self_intersection_curve_without_hint(ParametricSurface& surf, bool& not_intersect, bool& timeout);
+		void try_add_self_intersection_curve_with_cursor_hint(ParametricSurfaceObject& surf, bool& not_intersect, bool& timeout);
+		void try_add_self_intersection_curve_without_hint(ParametricSurfaceObject& surf, bool& not_intersect, bool& timeout);
 	public:
 		ObjectControllerSettingsWindow(ObjectController& controller, Camera& camera, const Cursor& cursor, WindowHandle& object_settings_window, TaskManager& task_manager) : controller(controller), camera(camera), cursor(cursor), object_settings_window_visible(object_settings_window->visible), task_manager(task_manager) {}
 
@@ -313,8 +315,10 @@ namespace ManualCAD
 					if (max_steps >= 10 && max_steps <= 10000)
 						intersection_max_steps = max_steps;
 				}
-				ImGui::Checkbox("Take cursor as a hint", &intersection_cursor_hint);
-				if (!intersection_cursor_hint)
+				ImGui::Checkbox("Find all", &find_all_intersections);
+				if (!find_all_intersections)
+					ImGui::Checkbox("Take cursor as a hint", &intersection_cursor_hint);
+				if (find_all_intersections || !intersection_cursor_hint)
 				{
 					ImGui::SliderInt("Samples along constant parameter", &intersection_sample_count, 1, 50, nullptr, ImGuiSliderFlags_NoInput);
 				}
@@ -324,7 +328,11 @@ namespace ManualCAD
 					auto surfaces = try_get_surfaces_from_selection(invalid_selection_count, not_param_surface);
 					if (surfaces.first != nullptr && surfaces.second != nullptr) // intersection of 2 surfaces
 					{
-						if (intersection_cursor_hint)
+						if (find_all_intersections)
+						{
+							try_add_all_intersection_curves(*surfaces.first, *surfaces.second, not_intersect, timeout);
+						}
+						else if (intersection_cursor_hint)
 						{
 							try_add_intersection_curve_with_cursor_hint(*surfaces.first, *surfaces.second, not_intersect, timeout);
 						}
@@ -335,7 +343,11 @@ namespace ManualCAD
 					}
 					else if (surfaces.first != nullptr) // self-intersection
 					{
-						if (intersection_cursor_hint)
+						if (find_all_intersections)
+						{
+							throw std::runtime_error("NOT IMPLEMENTED!"); // TODO
+						}
+						else if (intersection_cursor_hint)
 						{
 							try_add_self_intersection_curve_with_cursor_hint(*surfaces.first, not_intersect, timeout);
 						}

@@ -11,5 +11,10 @@ namespace ManualCAD
 		bool fast;
 		Vector3 origin;
 		Vector3 destination;
+
+		void to_gcode_positions() {
+			std::swap(origin.y, origin.z);
+			std::swap(destination.y, destination.z);
+		}
 	};
 }

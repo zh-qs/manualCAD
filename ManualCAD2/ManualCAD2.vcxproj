@@ -187,6 +187,8 @@
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="milling_program.cpp" />
+    <ClCompile Include="parametric_surface_intersection.cpp" />
+    <ClCompile Include="polygon_envelope.cpp" />
     <ClCompile Include="prototype.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="object_controller.cpp" />
@@ -194,9 +196,11 @@
     <ClCompile Include="parameter_space_view_window.cpp" />
     <ClCompile Include="rational_20_param_surface.cpp" />
     <ClCompile Include="renderable.cpp" />
+    <ClCompile Include="rough_path.cpp" />
     <ClCompile Include="serializer.cpp" />
     <ClCompile Include="settings_window.cpp" />
     <ClCompile Include="simple_rect.cpp" />
+    <ClCompile Include="surface_path.cpp" />
     <ClCompile Include="surface_with_contour.cpp" />
     <ClCompile Include="point_set.cpp" />
     <ClCompile Include="raycaster.cpp" />
@@ -210,6 +214,7 @@
     <ClCompile Include="wireframe_mesh.cpp" />
     <ClCompile Include="workpiece.cpp" />
     <ClCompile Include="workpiece_renderable.cpp" />
+    <ClCompile Include="zig_zag_path.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application_settings.h" />
@@ -217,6 +222,7 @@
     <ClInclude Include="box.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="bilinear_form_raycastable.h" />
+    <ClInclude Include="constant_parameter.h" />
     <ClInclude Include="cursor.h" />
     <ClInclude Include="cutter.h" />
     <ClInclude Include="cutter_move.h" />
@@ -224,7 +230,16 @@
     <ClInclude Include="graph.h" />
     <ClInclude Include="height_map.h" />
     <ClInclude Include="milling_program.h" />
+    <ClInclude Include="offset_surface.h" />
+    <ClInclude Include="parametric_surface.h" />
+    <ClInclude Include="parametric_surface_intersection.h" />
+    <ClInclude Include="plane_xz.h" />
+    <ClInclude Include="planimetrics.h" />
+    <ClInclude Include="polygon_envelope.h" />
     <ClInclude Include="prototype.h" />
+    <ClInclude Include="rough_path.h" />
+    <ClInclude Include="segment_bin_array.h" />
+    <ClInclude Include="surface_path.h" />
     <ClInclude Include="system_dialog.h" />
     <ClInclude Include="task.h" />
     <ClInclude Include="triangle_mesh.h" />
@@ -267,6 +282,7 @@
     <ClInclude Include="window.h" />
     <ClInclude Include="wireframe_mesh.h" />
     <ClInclude Include="workpiece.h" />
+    <ClInclude Include="zig_zag_path.h" />
     <CopyFileToFolders Include="workpiece_vertex_shader_g.glsl">
       <FileType>Document</FileType>
     </CopyFileToFolders>
@@ -373,6 +389,11 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="triangle_vertex_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="height_map_fragment_shader.glsl">
       <FileType>Document</FileType>
     </CopyFileToFolders>
   </ItemGroup>

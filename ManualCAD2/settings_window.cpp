@@ -68,7 +68,7 @@ namespace ManualCAD
 		return true;
 	}
 
-	std::pair<ParametricSurface*, ParametricSurface*> ObjectControllerSettingsWindow::try_get_surfaces_from_selection(bool& invalid_selection_count, bool& not_surface)
+	std::pair<ParametricSurfaceObject*, ParametricSurfaceObject*> ObjectControllerSettingsWindow::try_get_surfaces_from_selection(bool& invalid_selection_count, bool& not_surface)
 	{
 		auto& selected = controller.get_selected_objects();
 		if (selected.count() != 1 && selected.count() != 2)
@@ -77,11 +77,11 @@ namespace ManualCAD
 			return { nullptr, nullptr };
 		}
 
-		ParametricSurface* surfs[2] = { nullptr,nullptr };
+		ParametricSurfaceObject* surfs[2] = { nullptr,nullptr };
 		int i = 0;
 		for (auto* obj : selected)
 		{
-			ParametricSurface* surf = dynamic_cast<ParametricSurface*>(obj);
+			ParametricSurfaceObject* surf = dynamic_cast<ParametricSurfaceObject*>(obj);
 			if (surf == nullptr) {
 				not_surface = true;
 				return { nullptr, nullptr };
@@ -92,7 +92,32 @@ namespace ManualCAD
 		return { surfs[0], surfs[1] };
 	}
 
-	void ObjectControllerSettingsWindow::try_add_intersection_curve_with_cursor_hint(ParametricSurface& surf1, ParametricSurface& surf2, bool& not_intersect, bool& timeout)
+	void ObjectControllerSettingsWindow::try_add_all_intersection_curves(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, bool& not_intersect, bool& timeout)
+	{
+		try 
+		{
+			auto curves = IntersectionCurve::find_many_intersections(surf1, surf2, intersection_step_length, intersection_max_steps, intersection_sample_count, intersection_sample_count);
+			if (curves.empty())
+			{
+				not_intersect = true;
+				return;
+			}
+			for (auto& c : curves)
+			{
+				controller.add_object(std::move(c));
+			}
+		}
+		catch (const CommonIntersectionPointNotFoundException&)
+		{
+			not_intersect = true;
+		}
+		catch (const TimeoutException&)
+		{
+			timeout = true;
+		}
+	}
+
+	void ObjectControllerSettingsWindow::try_add_intersection_curve_with_cursor_hint(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, bool& not_intersect, bool& timeout)
 	{
 		try
 		{
@@ -127,7 +152,7 @@ namespace ManualCAD
 		//controller.add_object(std::move(c2));
 	}
 
-	void ObjectControllerSettingsWindow::try_add_intersection_curve_without_hint(ParametricSurface& surf1, ParametricSurface& surf2, bool& not_intersect, bool& timeout)
+	void ObjectControllerSettingsWindow::try_add_intersection_curve_without_hint(ParametricSurfaceObject& surf1, ParametricSurfaceObject& surf2, bool& not_intersect, bool& timeout)
 	{
 		try
 		{
@@ -144,7 +169,7 @@ namespace ManualCAD
 		}
 	}
 
-	void ObjectControllerSettingsWindow::try_add_self_intersection_curve_with_cursor_hint(ParametricSurface& surf, bool& not_intersect, bool& timeout)
+	void ObjectControllerSettingsWindow::try_add_self_intersection_curve_with_cursor_hint(ParametricSurfaceObject& surf, bool& not_intersect, bool& timeout)
 	{
 		try
 		{
@@ -161,7 +186,7 @@ namespace ManualCAD
 		}
 	}
 
-	void ObjectControllerSettingsWindow::try_add_self_intersection_curve_without_hint(ParametricSurface& surf, bool& not_intersect, bool& timeout)
+	void ObjectControllerSettingsWindow::try_add_self_intersection_curve_without_hint(ParametricSurfaceObject& surf, bool& not_intersect, bool& timeout)
 	{
 		try
 		{

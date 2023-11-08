@@ -21,7 +21,7 @@ namespace ManualCAD
 		static void build_bicubic_c2_bezier_surface_preview_settings(BicubicC2BezierSurfacePreview& preview, ObjectSettingsWindow& parent);
 		static void build_gregory_20_param_surface_settings(Gregory20ParamSurface& surf, ObjectSettingsWindow& parent);
 		static void build_intersection_curve_settings(IntersectionCurve& curve, ObjectSettingsWindow& parent);
-		static void build_parametric_surface_settings(ParametricSurface& surf, ObjectSettingsWindow& parent);
+		static void build_parametric_surface_settings(ParametricSurfaceObject& surf, ObjectSettingsWindow& parent);
 		static void build_workpiece_settings(Workpiece& workpiece, ObjectSettingsWindow& parent);
 		static void build_prototype_settings(Prototype& prototype, ObjectSettingsWindow& parent);
 	};
