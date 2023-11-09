@@ -9,10 +9,11 @@ namespace ManualCAD
 	class Cutter {
 	protected:
 		float radius;
+		const char type_char;
 	public:
 		float cutting_part_height = 4.0f;
 
-		Cutter(float diameter) : radius(0.5f * diameter) {}
+		Cutter(float diameter, char type_char) : radius(0.5f * diameter), type_char(type_char) {}
 		float get_diameter() const { return 2.0f * radius; }
 		float get_radius() const { return radius; }
 
@@ -21,6 +22,7 @@ namespace ManualCAD
 		virtual float get_height_offset(const float& distance) const = 0;
 		virtual void generate_cutter_mesh(TriangleMesh& mesh) const = 0;
 		virtual const char* get_type() const = 0;
+		char get_type_char() const { return type_char; }
 
 		inline void check_cutter(const HeightMap& height_map, int i, int j, const int& instruction_number, const float& height, const float& max_depth) const {
 			if (height_map.size.y - height > max_depth)
@@ -32,7 +34,7 @@ namespace ManualCAD
 
 	class BallCutter : public Cutter {
 	public:
-		BallCutter(float diameter) : Cutter(diameter) {}
+		BallCutter(float diameter) : Cutter(diameter, 'k') {}
 
 		void cut_pixel_virtual(HeightMap& height_map, int instruction_number, int x, int y, float height, float max_depth) const override;
 		float get_height_offset(const float& distance) const override;
@@ -42,7 +44,7 @@ namespace ManualCAD
 
 	class FlatCutter : public Cutter {
 	public:
-		FlatCutter(float diameter) : Cutter(diameter) {}
+		FlatCutter(float diameter) : Cutter(diameter, 'f') {}
 
 		void cut_pixel_virtual(HeightMap& height_map, int instruction_number, int x, int y, float height, float max_depth) const override;
 		float get_height_offset(const float& distance) const override;

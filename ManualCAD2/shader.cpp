@@ -188,12 +188,12 @@ namespace ManualCAD
 		glDeleteShader(fragment_shader_id);
 	}
 
-	void Shader::use()
+	void Shader::use() const
 	{
 		glUseProgram(id);
 	}
 
-	GLuint Shader::get_uniform_location(const GLchar* name)
+	GLuint Shader::get_uniform_location(const GLchar* name) const
 	{
 		return glGetUniformLocation(id, name);
 	}

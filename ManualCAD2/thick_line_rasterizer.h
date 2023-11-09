@@ -138,10 +138,10 @@ namespace ManualCAD
         }
     public:
         ThickLineRasterizer(HeightMap& height_map, const Cutter& cutter, const Vector3& from, const Vector3& to, const int& instruction_number, const float& max_depth) : height_map(height_map), cutter(cutter), instruction_number(instruction_number), max_depth(max_depth) {
-            this->from = { from.x, from.y };
-            this->to = { to.x, to.y };
-            from_h = from.z;
-            to_h = to.z;
+            this->from = { from.x, from.z };
+            this->to = { to.x, to.z };
+            from_h = from.y;
+            to_h = to.y;
             length_from_to = (this->to - this->from).length();
             generate_vertices();
         }

@@ -43,11 +43,11 @@ namespace ManualCAD
 		const auto& start_point = paths.front().front();
 		if (start_point.x <= center.x)
 		{
-			to_leap = { min.x - scale, 0.5f * (min.y + max.y) };
+			to_leap = { min.x - 2.0f * scale, 0.5f * (min.y + max.y) };
 		}
 		else if (start_point.x >= center.x)
 		{
-			to_leap = { max.x + scale, 0.5f * (min.y + max.y) };
+			to_leap = { max.x + 2.0f * scale, 0.5f * (min.y + max.y) };
 		}
 		/*else if (start_point.y <= min.y)
 		{
@@ -206,9 +206,10 @@ namespace ManualCAD
 	void Prototype::generate_flat_plane_program(const Cutter& cutter)
 	{
 		const Vector2 min = { view_boundary_points[0].x, view_boundary_points[0].z },
-			max = { view_boundary_points[2].x, view_boundary_points[2].z };
+			max = { view_boundary_points[2].x, view_boundary_points[2].z },
+			cutter_offset = { cutter.get_radius(), cutter.get_radius() };
 		const float height = view_boundary_points[0].y;
-		PlaneXZ plane{ min, max, height };
+		PlaneXZ plane{ min - cutter_offset, max + cutter_offset, height };
 		PolygonEnvelope::Builder envelope_builder;
 
 		for (const auto* surf : surfaces)
@@ -217,11 +218,11 @@ namespace ManualCAD
 			envelope_builder.add_polygon(intersection.get_uvs2());
 		}
 		auto envelope = envelope_builder.build();
-		envelope.expand(cutter.get_radius() * (1 + epsilon_factor)); // TODO coœ lepszego ¿eby nie podcina³o
+		envelope.expand(cutter.get_radius() * (1.5f)); // TODO coœ lepszego ¿eby nie podcina³o
 
 		ZigZagPath zigzag;
 		zigzag.add_line(envelope.get_points(), true);
-		auto paths = zigzag.generate_paths_outside_loops(min, max, cutter.get_radius(), cutter.get_radius() * epsilon_factor);
+		auto paths = zigzag.generate_paths_outside_loops(min - cutter_offset, max + cutter_offset, cutter.get_radius(), cutter.get_radius() * epsilon_factor);
 
 		std::vector<Vector3> points = link_flat_paths(paths);
 		points = compact_path(points);
@@ -234,9 +235,10 @@ namespace ManualCAD
 	void Prototype::generate_envelope_program(const Cutter& cutter)
 	{
 		const Vector2 min = { view_boundary_points[0].x, view_boundary_points[0].z },
-			max = { view_boundary_points[2].x, view_boundary_points[2].z };
+			max = { view_boundary_points[2].x, view_boundary_points[2].z },
+			cutter_offset = { cutter.get_radius(), cutter.get_radius() };
 		const float height = view_boundary_points[0].y;
-		PlaneXZ plane{ min, max, height };
+		PlaneXZ plane{ min - cutter_offset, max + cutter_offset, height };
 		PolygonEnvelope::Builder envelope_builder;
 
 		for (const auto* surf : surfaces)

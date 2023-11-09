@@ -12,7 +12,7 @@ namespace ManualCAD
 		void init(const char* vertex_shader_file, const char* geometry_shader_file, const char* fragment_shader_file);
 		void init(const char* vertex_shader_file, const char* tess_control_shader_file, const char* tess_eval_shader_file, const char* fragment_shader_file);
 		void init(const char* vertex_shader_file, const char* tess_control_shader_file, const char* tess_eval_shader_file, const char* geometry_shader_file, const char* fragment_shader_file);
-		void use();
-		GLuint get_uniform_location(const GLchar* name);
+		void use() const;
+		GLuint get_uniform_location(const GLchar* name) const;
 	};
 }

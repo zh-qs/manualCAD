@@ -186,9 +186,6 @@
     <ClCompile Include="milling_program.cpp">
       <Filter>Pliki źródłowe\milling\paths</Filter>
     </ClCompile>
-    <ClCompile Include="height_map.cpp">
-      <Filter>Pliki źródłowe\maths</Filter>
-    </ClCompile>
     <ClCompile Include="triangle_mesh.cpp">
       <Filter>Pliki źródłowe\drawable</Filter>
     </ClCompile>
@@ -227,6 +224,9 @@
     </ClCompile>
     <ClCompile Include="rough_path.cpp">
       <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClCompile>
+    <ClCompile Include="shader_library.cpp">
+      <Filter>Pliki źródłowe\graphics\rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -427,6 +427,9 @@
     </ClInclude>
     <ClInclude Include="surface_path.h">
       <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="shader_library.h">
+      <Filter>Pliki źródłowe\graphics\rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

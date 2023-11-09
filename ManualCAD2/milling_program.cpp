@@ -126,11 +126,11 @@ namespace ManualCAD
 					break;
 				case 'Y':
 					++pos;
-					move.destination.y = -extract_float(line, pos, pos) * program.get_ratio_to_centimeters();
+					move.destination.z = -extract_float(line, pos, pos) * program.get_ratio_to_centimeters(); // we switch Z with Y because CAD uses Y as height and G-code use Z as height; we have to also negate Z component (to avoid mirrored view)
 					break;
 				case 'Z':
 					++pos;
-					move.destination.z = extract_float(line, pos, pos) * program.get_ratio_to_centimeters();
+					move.destination.y = extract_float(line, pos, pos) * program.get_ratio_to_centimeters(); // we switch Z with Y because CAD uses Y as height and G-code use Z as height 
 					break;
 				default:
 					throw std::runtime_error("Error while parsing: Line \"" + line + "\" at " + std::to_string(pos) + ": Expected 'X' or 'Y' or 'Z', got \'" + line[pos] + "\'");
@@ -244,9 +244,9 @@ namespace ManualCAD
 			int x0 = from_pix.first, y0 = from_pix.second,
 				x1 = to_pix.first, y1 = to_pix.second;
 
-			cutter.cut_pixel(workpiece.height_map, instruction_number, x0, y0, from.z, workpiece.get_max_cutter_depth());
+			cutter.cut_pixel(workpiece.height_map, instruction_number, x0, y0, from.y, workpiece.get_max_cutter_depth());
 			ThickLineRasterizer(workpiece.height_map, cutter, from, to, instruction_number, workpiece.get_max_cutter_depth()).draw();
-			cutter.cut_pixel(workpiece.height_map, instruction_number, x1, y1, to.z, workpiece.get_max_cutter_depth());
+			cutter.cut_pixel(workpiece.height_map, instruction_number, x1, y1, to.y, workpiece.get_max_cutter_depth());
 
 			workpiece.invalidate();
 		}
@@ -256,13 +256,13 @@ namespace ManualCAD
 			percent += speed * parameters.delta_time;
 
 			Vector3 current_pos = lerp(from, to, percent / path_length);
-			workpiece.set_cutter_mesh_position({ current_pos.x, current_pos.z, current_pos.y });
+			workpiece.set_cutter_mesh_position(current_pos);
 			auto current = workpiece.height_map.position_to_pixel(current_pos);
 			std::pair<int, int> current_pixel = { lroundf(current.x), lroundf(current.y) };
 
 			// check if cutter goes straight down and cuts material with a tip (warning)
-			// if (previous_pos.x == current_pos.x && previous_pos.y == current_pos.y && workpiece.height_map.get_pixel(current_pixel.first, current_pixel.second) > current_pos.z) -> float-wise comparison (should usually work, but may rejecting positives)
-			if (previous_pixel == current_pixel && workpiece.height_map.get_pixel(current_pixel.first, current_pixel.second) > current_pos.z)
+			// if (previous_pos.x == current_pos.x && previous_pos.y == current_pos.y && workpiece.height_map.get_pixel(current_pixel.first, current_pixel.second) > current_pos.z) -> float-wise comparison (should usually work, but may reject positives)
+			if (previous_pixel == current_pixel && workpiece.height_map.get_pixel(current_pixel.first, current_pixel.second) > current_pos.y)
 				Logger::log_warning("[WARNING] N%d at (%d,%d): Cutting workpiece with cutter's tip (cutter going straight down)\n", instruction_number, current_pixel.first, current_pixel.second);
 
 			//cut_line_pure_bresenham(previous_pixel, current_pixel, previous_pos.z, current_pos.z);
@@ -305,9 +305,9 @@ namespace ManualCAD
 	{
 		std::vector<Vector3> points;
 		points.reserve(moves.size() + 1);
-		points.push_back({ moves.front().origin.x, moves.front().origin.z + 0.01f, moves.front().origin.y });
+		points.push_back({ moves.front().origin.x, moves.front().origin.y + 0.01f, moves.front().origin.z });
 		for (auto& move : moves)
-			points.push_back({ move.destination.x, move.destination.z + 0.01f, move.destination.y });
+			points.push_back({ move.destination.x, move.destination.y + 0.01f, move.destination.z });
 		return points;
 	}
 
@@ -337,18 +337,19 @@ namespace ManualCAD
 		return program;
 	}
 
-	void append_vector(std::ostream& s, const Vector3& vec)
+	void append_vector(std::ostream& s, const Vector3& vec, float inv_ratio)
 	{
-		s << std::setprecision(3)
-			<< "X" << vec.x
-			<< "Y" << vec.y
-			<< "Z" << vec.z
+		s << std::fixed << std::setprecision(3)
+			<< "X" << vec.x * inv_ratio
+			<< "Y" << -vec.z * inv_ratio
+			<< "Z" << vec.y * inv_ratio // we switch Z with Y because CAD uses Y as height and G-code use Z as height; we have to also negate Z component (to avoid mirrored view)
 			<< std::endl;
 	}
 
 	void MillingProgram::save_to_file(const char* filename)
 	{
 		int instruction_idx = 3;
+		const float inv_ratio = 1.0f / ratio_to_centimeters;
 
 		std::ofstream s(filename);
 
@@ -363,13 +364,13 @@ namespace ManualCAD
 
 		auto& first = moves.front();
 		s << "N" << instruction_idx << "G" << (first.fast ? "00" : "01");
-		append_vector(s, first.origin);
+		append_vector(s, first.origin, inv_ratio);
 		instruction_idx++;
 
 		for (auto& move : moves)
 		{
 			s << "N" << instruction_idx << "G" << (move.fast ? "00" : "01");
-			append_vector(s, move.destination);
+			append_vector(s, move.destination, inv_ratio);
 			instruction_idx++;
 		}
 

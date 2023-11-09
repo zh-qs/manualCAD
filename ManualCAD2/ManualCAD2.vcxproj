@@ -181,7 +181,6 @@
     <ClCompile Include="cutter.cpp" />
     <ClCompile Include="glApplication.cpp" />
     <ClCompile Include="graph.cpp" />
-    <ClCompile Include="height_map.cpp" />
     <ClCompile Include="line.cpp" />
     <ClCompile Include="linear_equation_system_4x4.cpp" />
     <ClCompile Include="logger.cpp" />
@@ -199,6 +198,7 @@
     <ClCompile Include="rough_path.cpp" />
     <ClCompile Include="serializer.cpp" />
     <ClCompile Include="settings_window.cpp" />
+    <ClCompile Include="shader_library.cpp" />
     <ClCompile Include="simple_rect.cpp" />
     <ClCompile Include="surface_path.cpp" />
     <ClCompile Include="surface_with_contour.cpp" />
@@ -239,6 +239,7 @@
     <ClInclude Include="prototype.h" />
     <ClInclude Include="rough_path.h" />
     <ClInclude Include="segment_bin_array.h" />
+    <ClInclude Include="shader_library.h" />
     <ClInclude Include="surface_path.h" />
     <ClInclude Include="system_dialog.h" />
     <ClInclude Include="task.h" />

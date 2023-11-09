@@ -1,5 +1,6 @@
 #include "glApplication.h"
 #include "exception.h"
+#include "shader_library.h"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
@@ -12,7 +13,7 @@ namespace ManualCAD
 
 	GlApplication::GlApplication(int width, int height, const char* title, const ImVec4& clear_color, /*Raycaster& raycaster, */ Renderer& renderer) : clear_color(clear_color), /*raycaster(raycaster),*/ renderer(renderer), controller(task_manager) {
 		if constexpr (ApplicationSettings::DEBUG)
-			printf("[INFO] Running in DEBUG mode");
+			printf("[INFO] Running in DEBUG mode\n");
 		
 		glfwSetErrorCallback(glfw_error_callback);
 		if (!glfwInit())
@@ -50,6 +51,7 @@ namespace ManualCAD
 
 		//raycaster.init(ApplicationSettings::INITIAL_DOWNSAMPLING_SCALE);// initialize raycaster
 		renderer.init();
+		ShaderLibrary::init();
 
 		cursor = std::make_unique<Cursor>();
 

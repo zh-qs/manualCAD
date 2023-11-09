@@ -586,7 +586,29 @@ namespace ManualCAD
 			
 			if (ImGui::Button("Save"))
 			{
-
+				std::string filename;
+				try
+				{
+					filename = SystemDialog::save_file_dialog("Save", { {"*.k??,*.f??", nullptr} });
+				}
+				catch (const std::exception& e)
+				{
+					Logger::log_error("[ERROR] Saving program file: %s\n", e.what());
+				}
+				if (!filename.empty())
+				{
+					int diameter_i = static_cast<int>(10.0f * program.cutter->get_diameter());
+					std::string extension = '.' + (program.cutter->get_type_char() + std::to_string(diameter_i));
+					if (filename.substr(filename.size() - 4, 4) != extension)
+						filename += extension;
+					try {
+						program.save_to_file(filename.c_str());
+					}
+					catch (std::runtime_error& e)
+					{
+						Logger::log_error("[ERROR] %s\n", e.what());
+					}
+				}
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Clear"))

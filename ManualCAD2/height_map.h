@@ -49,21 +49,21 @@ namespace ManualCAD
 		inline Vector2 position_to_pixel(Vector2 pos) {
 			return {
 				(pos.x / size.x + 0.5f) * size_x,
-				(pos.y / size.z + 0.5f) * size_y // this is correct: in milling programs height is Z (thus pos.y is depth), in CAD height is Y (thus size.z is depth)
+				(pos.y / size.z + 0.5f) * size_y // this is correct: Vector2 doesn't have height component (thus pos.y is depth) and in CAD height is Y (thus size.z is depth)
 			};
 		}
 
 		inline Vector2 position_to_pixel(Vector3 pos) {
 			return {
 				(pos.x / size.x + 0.5f) * size_x,
-				(pos.y / size.z + 0.5f) * size_y // this is correct: in milling programs height is Z (thus pos.y is depth), in CAD height is Y (thus size.z is depth)
+				(pos.z / size.z + 0.5f) * size_y
 			};
 		}
 
 		inline Vector2 pixel_to_position(Vector2 pix) {
 			return {
 				(pix.x / size_x - 0.5f) * size.x,
-				(pix.y / size_y - 0.5f) * size.z // this is correct: in milling programs height is Z (thus pos.y is depth), in CAD height is Y (thus size.z is depth)
+				(pix.y / size_y - 0.5f) * size.z // this is correct: Vector2 doesn't have height component (thus pix.y is depth), in CAD height is Y (thus size.z is depth)
 			};
 		}
 
@@ -82,7 +82,5 @@ namespace ManualCAD
 		inline float pixels_to_length_y(float pix) {
 			return pix / size_y * size.z;
 		}
-
-		void cut_pixel_line(const std::pair<int, int>& from, const std::pair<int, int>& to); // TODO additional parameters
 	};
 }
