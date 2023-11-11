@@ -40,7 +40,7 @@ void ManualCAD::Serializer::serialize(const std::filesystem::path& filepath)
 	controller.add_objects_to_serializer(*this);
 	scene.camera.focusPoint = from_vector3(camera.target);
 	auto& distance = *camera.get_screen_to_target_distance_handle();
-	scene.camera.distance = distance / camera.scale;
+	scene.camera.distance = distance / camera.scale.x;
 	scene.camera.rotation = from_vector3_2(camera.get_rotation_deg());
 	scene.isCameraSet = true;
 
@@ -196,7 +196,10 @@ void ManualCAD::Serializer::deserialize(const std::filesystem::path& filepath)
 		camera.target = from_float3(scene.camera.focusPoint);
 		auto& distance = *camera.get_screen_to_target_distance_handle();
 		if constexpr (ApplicationSettings::ZOOM_POLICY == ApplicationSettings::CameraZoomPolicy::MultiplyScale)
-			camera.scale = distance / scene.camera.distance;
+		{
+			const float s = distance / scene.camera.distance;
+			camera.scale = { s,s,s };
+		}
 		else
 			distance = scene.camera.distance;
 		camera.rotx = PI * scene.camera.rotation.x / 180.0f;

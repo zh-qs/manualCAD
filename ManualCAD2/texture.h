@@ -53,7 +53,7 @@ namespace ManualCAD
 			}
 		}
 
-		void get_image(int width, int height, void* pixels) const {
+		void get_image(void* pixels) const {
 			glGetTexImage(GL_TEXTURE_2D, 0, FORMAT, GL_FLOAT, pixels);
 		}
 
@@ -93,4 +93,5 @@ namespace ManualCAD
 	using Texture = GlTexture<GL_RGBA>;
 	using RenderTexture = GlTexture<GL_RGBA, GL_RGBA, true>;
 	using TexMap = GlTexture<GL_RED, GL_R32F>;
+	using RenderTexMap = GlTexture<GL_RED, GL_R32F, true>;
 }

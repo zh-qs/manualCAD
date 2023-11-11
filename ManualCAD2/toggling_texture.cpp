@@ -107,7 +107,7 @@ namespace ManualCAD
 	{
 		Image image(tex_width, tex_height);
 		texture.bind();
-		texture.get_image(tex_width, tex_height, image.pixels.data());
+		texture.get_image(image.pixels.data());
 		Vector4 color = image.pixel(x, y), new_color;
 		if (color.x == 1.0f) // border
 			return;

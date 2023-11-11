@@ -55,7 +55,7 @@ namespace ManualCAD
 		static constexpr int TRIM_TEXTURE_SIZE_PIXELS = 600;
 
 		static constexpr bool BREAK_ON_TIMEOUT = true;
-		static constexpr std::clock_t COMPUTATION_TIMEOUT = 3 * CLOCKS_PER_SEC;
+		static constexpr std::clock_t COMPUTATION_TIMEOUT = CLOCKS_PER_SEC / 10;//3 * CLOCKS_PER_SEC;
 
 		static constexpr bool DEBUG = true;
 	};

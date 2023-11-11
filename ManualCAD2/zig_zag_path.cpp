@@ -9,8 +9,8 @@ namespace ManualCAD
 		// calculate intersections of loops with rows
 		for (int i = 0; i < rows; ++i)
 		{
-			const Vector2 seg1start{ min.x, min.y + (i + 1) * row_width },
-				seg1end{ max.x, min.y + (i + 1) * row_width };
+			const Vector2 seg1start{ min.x, min.y + i * row_width },
+				seg1end{ max.x, min.y + i * row_width };
 			for (const auto& line : lines)
 			{
 				for (int j = 0; j < line.points.size() - 1; ++j)
@@ -45,7 +45,7 @@ namespace ManualCAD
 		for (int i = 0; i < intersections.size(); ++i)
 		{
 			PathSegment s;
-			s.y = min.y + (i + 1) * row_width;
+			s.y = min.y + i * row_width;
 			s.start = { min.x, nullptr, -1 };
 			bool complete = false;
 			for (const auto& isec : intersections[i])
@@ -78,7 +78,7 @@ namespace ManualCAD
 		for (int i = 0; i < intersections.size(); ++i)
 		{
 			PathSegment s;
-			s.y = min.y + (i + 1) * row_width;
+			s.y = min.y + i * row_width;
 			s.start = { min.x, nullptr, -1 };
 
 			for (const auto& isec : intersections[i])
@@ -157,6 +157,7 @@ namespace ManualCAD
 						int prev_idx = (idx - dir) % line.points.size(); // TODO is non-looped also ok?
 						while (line.points[idx].y < next_ycoord && line.points[prev_idx].y < line.points[idx].y)
 						{
+							current_list.push_back(line.points[idx]); // ***
 							prev_idx = idx;
 							const int new_idx = line.looped ? ((idx + dir) % line.points.size()) : (idx + dir);
 							if (new_idx < 0 || new_idx >= line.points.size())
@@ -218,6 +219,7 @@ namespace ManualCAD
 						int prev_idx = (idx - dir) % line.points.size(); // TODO is non-looped also ok?
 						while (line.points[idx].y < next_ycoord && line.points[prev_idx].y < line.points[idx].y)
 						{
+							current_list.push_back(line.points[idx]); // ***
 							prev_idx = idx;
 							const int new_idx = line.looped ? ((idx + dir) % line.points.size()) : (idx + dir);
 							if (new_idx < 0 || new_idx >= line.points.size())
@@ -276,7 +278,7 @@ namespace ManualCAD
 
 	std::vector<std::vector<Vector2>> ZigZagPath::generate_paths_outside_loops(const Vector2& min, const Vector2& max, const float radius, const float epsilon) const
 	{
-		const float row_width = radius - epsilon;
+		const float row_width = 2.0f * radius - epsilon;
 		int rows = static_cast<int>((max.y - min.y) / row_width) + 1;
 
 		// calculate intersections of loops with rows
@@ -291,7 +293,7 @@ namespace ManualCAD
 
 	std::vector<std::vector<Vector2>> ZigZagPath::generate_paths_excluding_segments(const Vector2& min, const Vector2& max, const float radius, const float epsilon, const SegmentCheck& check) const
 	{
-		const float row_width = radius - epsilon;
+		const float row_width = 2.0f * radius - epsilon;
 		int rows = static_cast<int>((max.y - min.y) / row_width) + 1;
 
 		// calculate intersections of loops with rows

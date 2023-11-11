@@ -19,6 +19,7 @@
 #include "box.h"
 #include "constant_parameter.h"
 #include "parametric_surface_intersection.h"
+#include "ray.h"
 
 namespace ManualCAD
 {
@@ -66,7 +67,7 @@ namespace ManualCAD
 		virtual void bind_with(Object& object) = 0;
 		virtual void remove_binding_with(Object& object) = 0;
 
-		virtual float intersect_with_ray(const Vector3& origin, const Vector3& ray) = 0;
+		virtual float intersect_with_ray(const Ray& ray) = 0;
 		virtual bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const = 0;
 
 		virtual void replace_child_by(Object& child, Object& other) = 0;
@@ -306,7 +307,7 @@ namespace ManualCAD
 		}
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override;
+		float intersect_with_ray(const Ray& ray) override;
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 
 		void add_to_serializer(Serializer& serializer, int idx) override;
@@ -385,7 +386,7 @@ namespace ManualCAD
 		}
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override;
+		float intersect_with_ray(const Ray& ray) override;
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override;
 
 		inline Vector3 get_const_position() const {
@@ -425,7 +426,7 @@ namespace ManualCAD
 		}
 		void bind_with(Object& object) override;
 		void remove_binding_with(Object& object) override;
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 
 		void add_to_serializer(Serializer& serializer, int idx) override;
@@ -467,7 +468,7 @@ namespace ManualCAD
 
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override;
+		float intersect_with_ray(const Ray& ray) override;
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 
 		void on_move(const Vector3& move) override {
@@ -516,7 +517,7 @@ namespace ManualCAD
 		}
 		void bind_with(Object& object) override;
 		void remove_binding_with(Object& object) override;
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 		ObjectHandle make_linked_bernstein_points() {
 			auto handle = Object::create<PointCollection>(*this);
@@ -560,7 +561,7 @@ namespace ManualCAD
 		}
 		void bind_with(Object& object) override;
 		void remove_binding_with(Object& object) override;
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 
 		void add_to_serializer(Serializer& serializer, int idx) override;
@@ -624,7 +625,7 @@ namespace ManualCAD
 
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 		void on_delete() override;
 
@@ -693,7 +694,7 @@ namespace ManualCAD
 
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 		void replace_child_by(Object& child, Object& other) override {}
 
@@ -733,7 +734,7 @@ namespace ManualCAD
 
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 		void on_delete() override;
 
@@ -799,7 +800,7 @@ namespace ManualCAD
 
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 		void replace_child_by(Object& child, Object& other) override {}
 
@@ -838,7 +839,7 @@ namespace ManualCAD
 
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 
 		void on_delete() override {
@@ -965,7 +966,7 @@ namespace ManualCAD
 
 		Line2D& get_uvs_line_for(const ParametricSurfaceObject& surf) { return &surf == &surf1 ? uvs1_line : uvs2_line; }
 
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 
 		void replace_child_by(Object& child, Object& other) override {}

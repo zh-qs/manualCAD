@@ -10,11 +10,10 @@
 namespace ManualCAD
 {
 	class SurfacePath {
-		std::list<const ParametricSurfaceWithSecondDerivative*> surfaces;
+		const std::list<const ParametricSurfaceObject*>& surfaces;
 	public:
-		SurfacePath(const std::list<const ParametricSurfaceWithSecondDerivative*>& surfaces) : surfaces(surfaces) {}
-		SurfacePath(const std::list<const ParametricSurfaceObject*>& surfaces) : surfaces(surfaces.begin(), surfaces.end()) {}
+		SurfacePath(const std::list<const ParametricSurfaceObject*>& surfaces) : surfaces(surfaces) {}
 
-		std::vector<std::vector<std::vector<Vector2>>> generate_paths(const PlaneXZ& plane, const float radius, const float epsilon) const;
+		std::vector<std::vector<std::vector<Vector2>>> generate_paths(const PlaneXZ& plane, const float radius, const float epsilon, const float mill_height, const Vector3& real_workpiece_size) const;
 	};
 }

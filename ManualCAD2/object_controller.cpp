@@ -26,15 +26,16 @@ namespace ManualCAD
 	{
 		// raycasting
 		// TODO proper torus raycasting
-		Vector3 cam_pos = camera.get_world_position();
-		Vector3 world_vec = normalize(camera.screen_to_world({ 2.0f * x / width - 1.0f, 1.0f - 2.0f * y / height, 0.0f }, width, height) - cam_pos);
+		/*Vector3 cam_pos = camera.get_world_position();
+		Vector3 world_vec = normalize(camera.screen_to_world({ 2.0f * x / width - 1.0f, 1.0f - 2.0f * y / height, 0.0f }, width, height) - cam_pos);*/
+		Ray ray = camera.get_ray_to(camera.screen_to_world({ 2.0f * x / width - 1.0f, 1.0f - 2.0f * y / height, 0.0f }, width, height));
 
 		int min_i = -1;
 		double min_dist = INFINITY;
 		for (int i = 0; i < objects.size(); ++i)
 		{
 			if (!objects[i]->get_const_renderable().visible) continue;
-			const double dist = objects[i]->intersect_with_ray(cam_pos, world_vec);
+			const double dist = objects[i]->intersect_with_ray(ray);
 			if (isnan(dist)) continue;
 			if (dist < min_dist)
 			{

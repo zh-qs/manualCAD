@@ -6,6 +6,7 @@ uniform mat4 u_pvm;
 uniform float u_patches_x, u_patches_y;
 
 out vec2 tess_coords;
+out vec3 view_pos;
 
 vec4 de_boor(vec4 b0, vec4 b1, vec4 b2, vec4 b3, float t)
 {
@@ -30,4 +31,5 @@ void main()
 	vec4 p3 = de_boor(gl_in[12].gl_Position, gl_in[13].gl_Position, gl_in[14].gl_Position, gl_in[15].gl_Position, u);
 
 	gl_Position = u_pvm * de_boor(p0, p1, p2, p3, v);
+	view_pos = gl_Position.xyz;
 }

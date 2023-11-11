@@ -19,6 +19,10 @@ namespace ManualCAD
 		Shader two_dim_shader;
 		Shader workpiece_shader;
 		Shader triangle_shader;
+
+		enum class Type {
+			Default, HeightMap
+		};
 	};
 
 	class ShaderLibrary {
@@ -51,7 +55,7 @@ namespace ManualCAD
 		GLint uw_height_map_location;
 		GLint uw_uv_offset_location;
 
-		const ShaderSet& get_shaders(int idx) const { return shader_sets[idx]; }
+		const ShaderSet& get_shaders(ShaderSet::Type type) const { return shader_sets[static_cast<int>(type)]; }
 
 		static void init() {
 			if (!library.initialized)

@@ -28,6 +28,12 @@ namespace ManualCAD
 		1.0f, 1.0f
 	};
 
+	void Renderer::use_additional_uniform_variables(const Shader& active_shader) const
+	{
+		for (const auto& entry : additional_uniforms)
+			glUniform1f(active_shader.get_uniform_location(entry.first.c_str()), entry.second);
+	}
+
 	Renderer::Renderer()
 	{
 	}
@@ -94,6 +100,11 @@ namespace ManualCAD
 
 	void Renderer::render_all(int width, int height)
 	{
+		render_all_to(FrameBuffer::main_screen(), width, height);
+	}
+
+	void Renderer::render_all_to(const FrameBuffer& fbuffer, int width, int height)
+	{
 		if (stereoscopy_settings.enabled)
 		{
 			float eye_d[2] = { -stereoscopy_settings.interocular_distance, stereoscopy_settings.interocular_distance };
@@ -123,6 +134,8 @@ namespace ManualCAD
 			}
 			camera.eye_distance = 0;
 
+			fbuffer.bind();
+
 			// use shader and send uniform data (texture sampler)
 			quad_shader.use();
 			glActiveTexture(GL_TEXTURE0); // TODO for loop
@@ -138,13 +151,17 @@ namespace ManualCAD
 			quad_vao.bind();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 			quad_vao.unbind();
+
+			fbuffer.unbind();
 		}
 		else
 		{
+			fbuffer.bind();
 			for (const auto& step : render_steps)
 			{
 				step->do_render_step(*this, width, height);
 			}
+			fbuffer.unbind();
 		}
 		render_steps.clear();
 	}
@@ -156,13 +173,15 @@ namespace ManualCAD
 		ebo.bind();
 		ebo.set_dynamic_data(mesh.line_indices_data(), mesh.line_indices_size_bytes());*/
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * mesh.get_model_matrix();
 
 		set.line_shader.use();
 		glUniformMatrix4fv(lib.ul_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 		glUniform4f(lib.ul_color_location, color.x, color.y, color.z, color.w);
+
+		use_additional_uniform_variables(set.line_shader);
 
 		//mesh.vao.bind();
 		mesh.bind_to_render();
@@ -176,7 +195,7 @@ namespace ManualCAD
 	void Renderer::render_textured_wireframe(const TexturedWireframeMesh& mesh, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * mesh.get_model_matrix();
 
@@ -186,6 +205,8 @@ namespace ManualCAD
 		glUniform1i(lib.utl_trim_texture_location, 0);
 		glUniformMatrix4fv(lib.utl_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 		glUniform4f(lib.utl_color_location, color.x, color.y, color.z, color.w);
+
+		use_additional_uniform_variables(set.trim_line_shader);
 
 		//mesh.vao.bind();
 		mesh.bind_to_render();
@@ -201,13 +222,15 @@ namespace ManualCAD
 		/*vbo.bind();
 		vbo.set_dynamic_data(mesh.points_data(), mesh.points_size_bytes());*/
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * mesh.get_model_matrix();
 
 		set.point_shader.use();
 		glUniformMatrix4fv(lib.up_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 		glUniform4f(lib.up_color_location, color.x, color.y, color.z, color.w);
+
+		use_additional_uniform_variables(set.point_shader);
 
 		//vao.bind();
 		mesh.bind_to_render();
@@ -221,7 +244,7 @@ namespace ManualCAD
 	void Renderer::render_curve_and_polyline(const CurveWithPolyline& curve, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * curve.get_model_matrix();
 
@@ -229,6 +252,8 @@ namespace ManualCAD
 			set.line_shader.use();
 			glUniformMatrix4fv(lib.ul_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 			glUniform4f(lib.ul_color_location, curve.polyline_color.x, curve.polyline_color.y, curve.polyline_color.z, curve.polyline_color.w);
+
+			use_additional_uniform_variables(set.line_shader);
 
 			curve.bind_to_render();
 
@@ -244,6 +269,8 @@ namespace ManualCAD
 			glUniform1f(lib.ub_width_location, width);
 			glUniform1f(lib.ub_height_location, height);
 
+			use_additional_uniform_variables(set.bezier_shader);
+
 			curve.bind_to_render();
 
 			glLineWidth(thickness);
@@ -256,13 +283,16 @@ namespace ManualCAD
 	void Renderer::render_axes_cursor(const AxesCursor& ac, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
-		auto invs = 1.0f / camera.get_scale();
-		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * ac.get_model_matrix() * Matrix4x4::scale(invs, invs, invs);
+		auto scale = camera.get_scale();
+		Vector3 invs = { 1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z };
+		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * ac.get_model_matrix() * Matrix4x4::scale(invs.x, invs.y, invs.z);
 
 		set.cursor_shader.use();
 		glUniformMatrix4fv(lib.uc_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
+
+		use_additional_uniform_variables(set.cursor_shader);
 
 		//mesh.vao.bind();
 		ac.bind_to_render();
@@ -276,7 +306,7 @@ namespace ManualCAD
 	void Renderer::render_surface_and_bezier_contour(const SurfaceWithBezierContour& surf, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix();// * surf.get_model_matrix(); -> patch is not transformable
 
@@ -285,6 +315,8 @@ namespace ManualCAD
 			set.line_shader.use();
 			glUniformMatrix4fv(lib.ul_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 			glUniform4f(lib.ul_color_location, surf.contour_color.x, surf.contour_color.y, surf.contour_color.z, surf.contour_color.w);
+
+			use_additional_uniform_variables(set.line_shader);
 
 			surf.bind_contour_to_render();
 
@@ -310,9 +342,11 @@ namespace ManualCAD
 			glUniform1f(lib.upa_patches_x_location, surf.get_patches_x_count());
 			glUniform1f(lib.upa_patches_y_location, surf.get_patches_y_count());
 
+			use_additional_uniform_variables(set.bezier_patch_shader);
+
 			surf.bind_patch_to_render();
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
 			glLineWidth(thickness);
 			glDrawElements(GL_PATCHES, surf.get_patch_indices_count(), GL_UNSIGNED_INT, NULL);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -324,7 +358,7 @@ namespace ManualCAD
 	void Renderer::render_surface_and_de_boor_contour(const SurfaceWithDeBoorContour& surf, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix();// * surf.get_model_matrix(); -> patch is not transformable
 
@@ -333,6 +367,8 @@ namespace ManualCAD
 			set.line_shader.use();
 			glUniformMatrix4fv(lib.ul_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 			glUniform4f(lib.ul_color_location, surf.contour_color.x, surf.contour_color.y, surf.contour_color.z, surf.contour_color.w);
+
+			use_additional_uniform_variables(set.line_shader);
 
 			surf.bind_contour_to_render();
 
@@ -358,9 +394,11 @@ namespace ManualCAD
 			glUniform1f(lib.upb_patches_x_location, surf.get_patches_x_count());
 			glUniform1f(lib.upb_patches_y_location, surf.get_patches_y_count());
 
+			use_additional_uniform_variables(set.de_boor_patch_shader);
+
 			surf.bind_patch_to_render();
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
 			glLineWidth(thickness);
 			glDrawElements(GL_PATCHES, surf.get_patch_indices_count(), GL_UNSIGNED_INT, NULL);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -372,7 +410,7 @@ namespace ManualCAD
 	void Renderer::render_rational_20_param_surface(const Rational20ParamSurface& surf, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix();// * surf.get_model_matrix(); -> patch is not transformable
 
@@ -381,6 +419,8 @@ namespace ManualCAD
 			set.line_shader.use();
 			glUniformMatrix4fv(lib.ul_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 			glUniform4f(lib.ul_color_location, surf.contour_color.x, surf.contour_color.y, surf.contour_color.z, surf.contour_color.w);
+
+			use_additional_uniform_variables(set.line_shader);
 
 			surf.bind_to_render();
 
@@ -398,9 +438,11 @@ namespace ManualCAD
 			glUniform1i(lib.upr_divisions_x_location, surf.divisions_x);
 			glUniform1i(lib.upr_divisions_y_location, surf.divisions_y);
 
+			use_additional_uniform_variables(set.rational_20_param_patch_shader);
+
 			surf.bind_to_render();
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
 			glLineWidth(thickness);
 			glDrawArrays(GL_PATCHES, 0, surf.get_point_count());
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -425,7 +467,7 @@ namespace ManualCAD
 	void Renderer::render_simple_rect(const SimpleRect& rect, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		set.simple_shader.use();
 
@@ -433,6 +475,9 @@ namespace ManualCAD
 		glUniform2f(lib.us_pos_location, rect.position.x, rect.position.y);
 
 		glUniform4f(lib.us_color_location, rect.color.x, rect.color.y, rect.color.z, rect.color.w * 0.5f);
+
+		use_additional_uniform_variables(set.simple_shader);
+
 		rect.bind_to_render();
 		glDrawArrays(GL_TRIANGLES, 0, rect.get_quad_vertices_count());
 
@@ -447,7 +492,7 @@ namespace ManualCAD
 	void Renderer::render_line(const Line& line, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * line.get_model_matrix();
 
@@ -455,6 +500,8 @@ namespace ManualCAD
 
 		glUniformMatrix4fv(lib.ul_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 		glUniform4f(lib.ul_color_location, color.x, color.y, color.z, color.w);
+
+		use_additional_uniform_variables(set.line_shader);
 
 		line.bind_to_render();
 
@@ -467,7 +514,7 @@ namespace ManualCAD
 	void Renderer::render_line_2d(const Line2D& line, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		set.two_dim_shader.use();
 
@@ -476,6 +523,8 @@ namespace ManualCAD
 		glUniform2f(lib.u2d_urange_location, urange.from, urange.to);
 		glUniform2f(lib.u2d_vrange_location, vrange.from, vrange.to);
 		glUniform4f(lib.u2d_color_location, color.x, color.y, color.z, color.w);
+
+		use_additional_uniform_variables(set.two_dim_shader);
 
 		line.bind_to_render();
 
@@ -488,7 +537,7 @@ namespace ManualCAD
 	void Renderer::render_workpiece_renderable(const WorkpieceRenderable& workpiece_renderable, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto pv = camera.get_projection_matrix(width, height) * camera.get_view_matrix();
 
@@ -503,6 +552,8 @@ namespace ManualCAD
 		auto offset = workpiece_renderable.get_uv_offset();
 		glUniform2f(lib.uw_uv_offset_location, offset.x, offset.y);
 
+		use_additional_uniform_variables(set.workpiece_shader);
+
 		//mesh.vao.bind();
 		workpiece_renderable.bind_to_render();
 
@@ -515,7 +566,7 @@ namespace ManualCAD
 	void Renderer::render_triangle_mesh(const TriangleMesh& mesh, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
-		const auto& set = lib.get_shaders(0); // default
+		const auto& set = lib.get_shaders(default_shader_set);
 
 		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix() * mesh.get_model_matrix();
 
@@ -523,6 +574,8 @@ namespace ManualCAD
 		glUniformMatrix4fv(lib.ut_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
 		glUniformMatrix4fv(lib.ut_m_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(mesh.get_model_matrix()).elem);
 		glUniform4f(lib.ut_color_location, color.x, color.y, color.z, color.w);
+
+		use_additional_uniform_variables(set.triangle_shader);
 
 		mesh.bind_to_render();
 

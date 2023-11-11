@@ -17,11 +17,15 @@
 #include "simple_rect.h"
 #include "workpiece_renderable.h"
 #include "triangle_mesh.h"
+#include "shader_library.h"
 
 #include <list>
 #include <memory>
 #include "line.h"
 #include "textured_wireframe_mesh.h"
+
+#include <map>
+#include <string>
 
 namespace ManualCAD
 {
@@ -38,9 +42,13 @@ namespace ManualCAD
 
 		Texture white_texture;
 
+		std::map<std::string, float> additional_uniforms;
+
 		Camera camera;
 
 		std::list<std::unique_ptr<RenderStep>> render_steps;
+
+		void use_additional_uniform_variables(const Shader& active_shader) const;
 	public:
 		struct StereoscopySettings {
 			bool enabled = false;
@@ -51,6 +59,9 @@ namespace ManualCAD
 			float view_saturation = 1.0f;
 		} stereoscopy_settings;
 
+		ShaderSet::Type default_shader_set = ShaderSet::Type::Default;
+		GLenum polygon_mode = GL_LINE;
+
 		Renderer();
 
 		void init();
@@ -58,6 +69,10 @@ namespace ManualCAD
 		//void clear_render_steps() { render_steps.clear(); }
 		void add(const Renderable& renderable, float thickness = 1.0f);
 		void render_all(int width, int height);
+		void render_all_to(const FrameBuffer& fbuffer, int width, int height);
+
+		void set_additional_uniform_variable(const std::string& name, float value) { additional_uniforms[name] = value; }
+		void remove_additional_uniform_variable(const std::string& name) { additional_uniforms.erase(name); }
 
 		void render_wireframe(const WireframeMesh& mesh, const Vector4& color, int width, int height, float thickness = 1.0f);
 		void render_textured_wireframe(const TexturedWireframeMesh& mesh, const Vector4& color, int width, int height, float thickness = 1.0f);

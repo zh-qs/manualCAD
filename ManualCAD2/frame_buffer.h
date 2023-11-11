@@ -28,5 +28,11 @@ namespace ManualCAD
 		void bind_to_read() {
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, id);
 		}
+
+		static FrameBuffer main_screen() {
+			FrameBuffer fbo;
+			fbo.id = fbo.texture_id = fbo.renderbuffer_id = 0;
+			return fbo;
+		}
 	};
 }

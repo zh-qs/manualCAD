@@ -36,10 +36,9 @@ namespace ManualCAD
 	{
 		constexpr float EPS = 1e-4f;
 
-		auto pp1 = surf1.evaluate(uv1.x, uv1.y), pp2 = surf1.evaluate(uv1.x, uv1.y);
-		float l = (surf1.evaluate(uv1.x, uv1.y) - surf2.evaluate(uv2.x, uv2.y)).length();
+		const auto pp1 = surf1.evaluate(uv1.x, uv1.y), pp2 = surf2.evaluate(uv2.x, uv2.y);
 
-		if ((surf1.evaluate(uv1.x, uv1.y) - surf2.evaluate(uv2.x, uv2.y)).length() >= EPS)
+		if ((pp1 - pp2).length() >= EPS)
 			throw CommonIntersectionPointNotFoundException();
 
 		const auto norm1 = surf1.normal(uv1.x, uv1.y), norm2 = surf2.normal(uv2.x, uv2.y);
@@ -52,7 +51,10 @@ namespace ManualCAD
 
 		for (int i = 0; i < uvs1.size(); ++i)
 		{
-			if ((uv1 - uvs1[i]).length() < step && (uv2 - uvs2[i]).length() < step)
+			const auto pi1 = surf1.evaluate(uvs1[i].x, uvs1[i].y),
+				pi2 = surf2.evaluate(uvs2[i].x, uvs2[i].y);
+			//if ((uv1 - uvs1[i]).length() < step && (uv2 - uvs2[i]).length() < step)
+			if ((pp1 - pi1).length() < step && (pp2 - pi2).length() < step)
 			{
 				/*auto P1 = surf1.evaluate(uvs1[i].x, uvs1[i].y),
 					P2 = surf1.evaluate(uvs1[i + 1].x, uvs1[i + 1].y);
@@ -79,7 +81,7 @@ namespace ManualCAD
 			+ surf2.get_u_range().to - surf2.get_u_range().from
 			+ surf2.get_v_range().to - surf2.get_v_range().from) * 0.25f * EPS;*/
 
-		//const auto xx1 = surf1.evaluate(uv1start.x, uv1start.y), xx2 = surf2.evaluate(uv2start.x, uv2start.y), xx3 = xx1 - xx2;
+			//const auto xx1 = surf1.evaluate(uv1start.x, uv1start.y), xx2 = surf2.evaluate(uv2start.x, uv2start.y), xx3 = xx1 - xx2;
 		if (!surf1.get_u_range().contains(uv1start.x)
 			|| !surf1.get_v_range().contains(uv1start.y)
 			|| !surf2.get_u_range().contains(uv2start.x)
@@ -113,8 +115,6 @@ namespace ManualCAD
 
 			Vector4 sol = { uv1.x, uv1.y, uv2.x, uv2.y }, prev_sol;
 
-			const auto start_time = std::clock();
-
 			bool should_change_direction = false;
 
 			if (!draw_along_border1 && !draw_along_border2) { // *****
@@ -141,9 +141,18 @@ namespace ManualCAD
 				Vector4 F;
 				Matrix4x4 jacobian;
 
+				const auto start_time = std::clock();
+
 				do
 				{
+					//try
+					//{
 					check_timeout(start_time);
+					//}
+					//catch (const TimeoutException&)
+					//{
+						//break;
+					//} // TODO delete try-catch
 
 					const auto P1 = surf1.evaluate(sol.x, sol.y), P2 = surf2.evaluate(sol.z, sol.w);
 					F = Vector4::extend(P1 - P2, dot(P1 - P, tangent) - step);
@@ -317,6 +326,7 @@ namespace ManualCAD
 			if (inverse_direction)
 			{
 				if ((surf1.evaluate(sol.x, sol.y) - surf1.evaluate(uvs1.back().x, uvs1.back().y)).length() < 0.5f * step)
+					//if ((surf1.evaluate(sol.x, sol.y) - surf1.evaluate(uvs1.back().x, uvs1.back().y)).length() < step)
 				{
 					looped = true;
 					break;
@@ -327,6 +337,7 @@ namespace ManualCAD
 			else
 			{
 				if ((surf1.evaluate(sol.x, sol.y) - surf1.evaluate(uvs1.front().x, uvs1.front().y)).length() < 0.5f * step)
+					//if ((surf1.evaluate(sol.x, sol.y) - surf1.evaluate(uvs1.front().x, uvs1.front().y)).length() < step)
 				{
 					looped = true;
 					break;
@@ -460,7 +471,7 @@ namespace ManualCAD
 			+ surf2.get_u_range().to - surf2.get_u_range().from
 			+ surf2.get_v_range().to - surf2.get_v_range().from) * 0.25f * EPS;*/
 
-		// gradienty proste (TODO sprzê¿one)
+			// gradienty proste (TODO sprzê¿one)
 		Vector4 result = { uv1start.x, uv1start.y, uv2start.x, uv2start.y };
 		auto surf_point1 = surf1.evaluate(result.x, result.y),
 			surf_point2 = surf2.evaluate(result.z, result.w);
@@ -784,14 +795,14 @@ namespace ManualCAD
 		auto bounds1 = surf1.get_patch_bounds(),
 			bounds2 = surf2.get_patch_bounds();
 
-		auto box1 = surf1.get_bounding_box(),
-			box2 = surf2.get_bounding_box();
-		size_t max_samples = std::max(sample_count_x, sample_count_y);
-		const float x1 = box1.x_max - box1.x_min,
-			y1 = box1.y_max - box1.y_min,
-			x2 = box2.x_max - box2.x_min,
-			y2 = box2.y_max - box2.y_min;
-		const float min_d = (1.0f / max_samples) * sqrtf(x1 * x1 + y1 * y1 + x2 * x2 + y2 * y2);
+		//auto box1 = surf1.get_bounding_box(),
+		//	box2 = surf2.get_bounding_box();
+		//size_t max_samples = std::max(sample_count_x, sample_count_y);
+		//const float x1 = box1.x_max - box1.x_min,
+		//	y1 = box1.y_max - box1.y_min,
+		//	x2 = box2.x_max - box2.x_min,
+		//	y2 = box2.y_max - box2.y_min;
+		//const float min_d = (1.0f / max_samples) * sqrtf(x1 * x1 + y1 * y1 + x2 * x2 + y2 * y2);
 
 		std::list<ParametricSurfaceIntersection> intersections;
 
@@ -818,7 +829,14 @@ namespace ManualCAD
 				std::uniform_real_distribution<float> random_v1(vrange1.from, vrange1.to);
 				std::uniform_real_distribution<float> random_u2(urange2.from, urange2.to);
 				std::uniform_real_distribution<float> random_v2(vrange2.from, vrange2.to);
-				for (int i = 0; i <= sample_count_x * sample_count_y / intersecting_boxes.size(); ++i)
+				const int samples = sample_count_x * sample_count_y / intersecting_boxes.size();
+
+				auto prod_box = Box::intersect(p.first.box, p.second.box);
+				const float x1 = prod_box.x_max - prod_box.x_min,
+					y1 = prod_box.y_max - prod_box.y_min;
+				const float min_d = (1.0f / (samples + 1)) * sqrtf(x1 * x1 + y1 * y1);
+
+				for (int i = 0; i <= samples; ++i)
 				{
 					const float u1 = random_u1(dev),
 						v1 = random_v1(dev),
@@ -853,6 +871,11 @@ namespace ManualCAD
 			}
 			else
 			{
+				auto prod_box = Box::intersect(p.first.box, p.second.box);
+				const float x1 = prod_box.x_max - prod_box.x_min,
+					y1 = prod_box.y_max - prod_box.y_min;
+				const float min_d = (1.0f / (sample_count_x * sample_count_y + 1)) * sqrtf(x1 * x1 + y1 * y1);
+
 				for (int i1 = 1; i1 <= sample_count_x; ++i1)
 					for (int j1 = 1; j1 <= sample_count_y; ++j1)
 						for (int i2 = 1; i2 <= sample_count_x; ++i2)

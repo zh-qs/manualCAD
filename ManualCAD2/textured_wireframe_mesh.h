@@ -28,7 +28,7 @@ namespace ManualCAD
 		}
 	public:
 		TexturedWireframeMesh(const Matrix4x4& model, const Texture& texture) : Renderable(model), ebo(), texvbo(), texture(texture) { init_additional_buffers(); }
-		TexturedWireframeMesh(const Texture& texture) : TexturedWireframeMesh(Matrix4x4::identity(), texture) { init_additional_buffers(); }
+		TexturedWireframeMesh(const Texture& texture) : TexturedWireframeMesh(Matrix4x4::identity(), texture) {}
 		
 		inline size_t get_point_count() const { return point_count; }
 		inline size_t get_line_count() const { return line_count; }

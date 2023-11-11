@@ -181,6 +181,7 @@
     <ClCompile Include="cutter.cpp" />
     <ClCompile Include="glApplication.cpp" />
     <ClCompile Include="graph.cpp" />
+    <ClCompile Include="height_map_renderer.cpp" />
     <ClCompile Include="line.cpp" />
     <ClCompile Include="linear_equation_system_4x4.cpp" />
     <ClCompile Include="logger.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="cutter_move.h" />
     <ClInclude Include="ellipsoid.h" />
     <ClInclude Include="graph.h" />
+    <ClInclude Include="height_map_renderer.h" />
     <ClInclude Include="height_map.h" />
     <ClInclude Include="milling_program.h" />
     <ClInclude Include="offset_surface.h" />
@@ -237,6 +239,7 @@
     <ClInclude Include="planimetrics.h" />
     <ClInclude Include="polygon_envelope.h" />
     <ClInclude Include="prototype.h" />
+    <ClInclude Include="ray.h" />
     <ClInclude Include="rough_path.h" />
     <ClInclude Include="segment_bin_array.h" />
     <ClInclude Include="shader_library.h" />

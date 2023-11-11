@@ -228,6 +228,9 @@
     <ClCompile Include="shader_library.cpp">
       <Filter>Pliki źródłowe\graphics\rendering</Filter>
     </ClCompile>
+    <ClCompile Include="height_map_renderer.cpp">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glApplication.h">
@@ -430,6 +433,12 @@
     </ClInclude>
     <ClInclude Include="shader_library.h">
       <Filter>Pliki źródłowe\graphics\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="ray.h">
+      <Filter>Pliki źródłowe\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="height_map_renderer.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

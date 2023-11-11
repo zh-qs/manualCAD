@@ -6,6 +6,8 @@
 #include <cstring>
 #include "logger.h"
 #include "system_dialog.h"
+#include "height_map_renderer.h"
+#include "plane_xz.h"
 
 namespace ManualCAD
 {
@@ -562,6 +564,7 @@ namespace ManualCAD
 		const char* cutters[] = { "K16", "K08", "K01", "F12", "F10" };
 		static int cutter_current;
 		ImGui::Combo("Cutter type", &cutter_current, cutters, IM_ARRAYSIZE(cutters));
+
 		if (ImGui::Button("Generate"))
 		{
 			std::unique_ptr<Cutter> cutter;
@@ -569,6 +572,7 @@ namespace ManualCAD
 				cutter = std::make_unique<FlatCutter>(cutter_current == 3 ? 1.2f : 1.0f);
 			else
 				cutter = std::make_unique<BallCutter>(cutter_current == 0 ? 1.6f : (cutter_current == 1 ? 0.8f : 0.1f));
+
 			prototype.generate_program(static_cast<Prototype::ProgramType>(item_current), std::move(cutter));
 		}
 
@@ -619,6 +623,24 @@ namespace ManualCAD
 		if (ImGui::Button("Build and show envelope"))
 		{
 			prototype.show_envelope_experimental();
+		}
+		static int tex_idx = -1;
+		if (ImGui::Button("Render index map"))
+		{
+			const Vector2 min = { prototype.view_boundary_points[0].x, prototype.view_boundary_points[0].z },
+				max = { prototype.view_boundary_points[2].x, prototype.view_boundary_points[2].z };
+			const float height = prototype.view_boundary_points[0].y;
+			PlaneXZ plane{ min, max, height };
+			Box box = plane.get_bounding_box();
+			box.y_max += prototype.mill_height * prototype.scale;
+			Vector3 map_size = { box.x_max - box.x_min, box.y_max - box.y_min,box.z_max - box.z_min };
+			auto r = HeightMapRenderer{ prototype.surfaces, box };
+			r.render_index_map(map_size);
+			tex_idx = r.get_texture().get_id();
+		}
+		if (tex_idx > 0)
+		{
+			ImGui::Image((void*)(intptr_t)tex_idx, { 300, 300 });
 		}
 	}
 }

@@ -28,7 +28,7 @@ namespace ManualCAD
 			const auto cr = cross(fu, fv);
 			const auto dcr = cross(fuu, fv) + cross(fu, fuv);
 			const float invl = 1.0f/cr.length();
-			return surf.du(u,v) + (offset * invl) * (dcr + (invl * invl * dot(dcr, cr)) * cr);
+			return surf.du(u,v) + (offset * invl) * (dcr - (invl * invl * dot(dcr, cr)) * cr);
 		}
 		Vector3 dv(float u, float v) const override {
 			const auto fu = surf.du(u, v),
@@ -38,7 +38,7 @@ namespace ManualCAD
 			const auto cr = cross(fu, fv);
 			const auto dcr = cross(fuv, fv) + cross(fu, fvv);
 			const float invl = 1.0f / cr.length();
-			return surf.dv(u, v) + (offset * invl) * (dcr + (invl * invl * dot(dcr, cr)) * cr);
+			return surf.dv(u, v) + (offset * invl) * (dcr - (invl * invl * dot(dcr, cr)) * cr);
 		}
 
 		Box get_bounding_box() const override {

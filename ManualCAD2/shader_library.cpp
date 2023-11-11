@@ -51,12 +51,12 @@ namespace ManualCAD
 	void ShaderLibrary::init_shaders()
 	{
 		shader_sets.push_back(get_default_set());
-		//shader_sets.push_back(get_height_map_set());
+		shader_sets.push_back(get_height_map_set()); // TODO optimize: OpenGL compiles many GLSL files more than once
 	}
 
 	void ShaderLibrary::init_locations()
 	{
-		auto default_set = get_shaders(0);
+		auto default_set = get_shaders(ShaderSet::Type::Default);
 
 		ul_pvm_location = default_set.line_shader.get_uniform_location("u_pvm");
 		ul_color_location = default_set.line_shader.get_uniform_location("u_color");

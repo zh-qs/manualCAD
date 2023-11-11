@@ -470,14 +470,18 @@ namespace ManualCAD
 				ImGui::ColorEdit3("Background color", &clear_color.x, ImGuiColorEditFlags_Float);
 			}
 			if (ImGui::CollapsingHeader("Camera")) {
+
+				const char* proj_types[] = {"Perspective", "Ortographic"};
+				ImGui::Combo("Projection type", reinterpret_cast<int*>(&camera.projection_type), proj_types, IM_ARRAYSIZE(proj_types));
+
 				float fov_deg = camera.fov_rad * 180.0f / PI;
 				ImGui::SliderFloat("Near plane", &camera.near, 0.01f, 1.0f, NULL, ImGuiSliderFlags_NoInput);
 				ImGui::SliderFloat("Far plane", &camera.far, 10.0f, 1000.0f, NULL, ImGuiSliderFlags_NoInput);
-				if (ImGui::SliderFloat("FOV angle", &fov_deg, 10.0f, 170.0f, NULL, ImGuiSliderFlags_NoInput)) {
+				if (camera.projection_type == Camera::ProjectionType::Perspective && ImGui::SliderFloat("FOV angle", &fov_deg, 10.0f, 170.0f, NULL, ImGuiSliderFlags_NoInput)) {
 					camera.fov_rad = fov_deg * PI / 180.0f;
 				}
 				ImGui::SliderFloat("Distance from target", camera.get_screen_to_target_distance_handle(), 0.0f, 10.0f, NULL, ImGuiSliderFlags_NoInput);
-				ImGui::Text("Current scale: %f", camera.get_scale());
+				ImGui::Text("Current scale: %f", camera.get_scale().x); // scale in display is uniform
 				ImGui::SameLine();
 				if (ImGui::Button("Reset scale"))
 					camera.reset_scale();

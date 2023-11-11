@@ -20,11 +20,11 @@ namespace ManualCAD
 
 	Transformation ObjectCollection::EMPTY = {};
 
-	float general_intersection(const Vector3& position, const Vector3& origin, const Vector3& ray)
+	float general_intersection(const Vector3& position, const Ray& ray)
 	{
 		float min_sin = ApplicationSettings::SELECTION_THRESHOLD;
-		Vector3 to_object = position - origin;
-		float sin = cross(normalize(to_object), ray).length();
+		Vector3 to_object = position - ray.origin;
+		float sin = cross(normalize(to_object), ray.direction).length();
 		if (sin < min_sin)
 			return to_object.length();
 
@@ -80,9 +80,9 @@ namespace ManualCAD
 		ObjectSettings::build_parametric_surface_settings(*this, parent);
 	}
 
-	float Torus::intersect_with_ray(const Vector3& origin, const Vector3& ray)
+	float Torus::intersect_with_ray(const Ray& ray)
 	{
-		return general_intersection(transformation.position, origin, ray); // TODO proper torus raycasting
+		return general_intersection(transformation.position, ray); // TODO proper torus raycasting
 	}
 
 	void Torus::add_to_serializer(Serializer& serializer, int idx)
@@ -135,9 +135,9 @@ namespace ManualCAD
 		return result;
 	}
 
-	float Point::intersect_with_ray(const Vector3& origin, const Vector3& ray)
+	float Point::intersect_with_ray(const Ray& ray)
 	{
-		return general_intersection(transformation.position, origin, ray);
+		return general_intersection(transformation.position, ray);
 	}
 
 	void ObjectCollection::build_settings(ObjectSettingsWindow& parent)
@@ -367,13 +367,13 @@ namespace ManualCAD
 		set.color = color;
 	}
 
-	float PointCollection::intersect_with_ray(const Vector3& origin, const Vector3& ray)
+	float PointCollection::intersect_with_ray(const Ray& ray)
 	{
 		int min_i = -1;
 		float min_dist = INFINITY;
 		for (int i = 0; i < points.size(); ++i)
 		{
-			float dist = general_intersection(points[i], origin, ray);
+			float dist = general_intersection(points[i], ray);
 			if (isnan(dist)) continue;
 			if (dist < min_dist)
 			{

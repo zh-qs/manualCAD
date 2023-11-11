@@ -28,6 +28,7 @@ namespace ManualCAD
 		}
 
 		inline const float* data() const { return pixels.data(); }
+		inline float* data() { return pixels.data(); }
 
 		inline bool are_coords_valid(int x, int y) { return x >= 0 && x < size_x && y >= 0 && y < size_y; }
 
@@ -46,40 +47,40 @@ namespace ManualCAD
 				pixels[x + y * size_x] = value_to_map;
 		}
 
-		inline Vector2 position_to_pixel(Vector2 pos) {
+		inline Vector2 position_to_pixel(Vector2 pos) const {
 			return {
 				(pos.x / size.x + 0.5f) * size_x,
 				(pos.y / size.z + 0.5f) * size_y // this is correct: Vector2 doesn't have height component (thus pos.y is depth) and in CAD height is Y (thus size.z is depth)
 			};
 		}
 
-		inline Vector2 position_to_pixel(Vector3 pos) {
+		inline Vector2 position_to_pixel(Vector3 pos) const {
 			return {
 				(pos.x / size.x + 0.5f) * size_x,
 				(pos.z / size.z + 0.5f) * size_y
 			};
 		}
 
-		inline Vector2 pixel_to_position(Vector2 pix) {
+		inline Vector2 pixel_to_position(Vector2 pix) const {
 			return {
 				(pix.x / size_x - 0.5f) * size.x,
 				(pix.y / size_y - 0.5f) * size.z // this is correct: Vector2 doesn't have height component (thus pix.y is depth), in CAD height is Y (thus size.z is depth)
 			};
 		}
 
-		inline float length_to_pixels_x(float l) {
+		inline float length_to_pixels_x(float l) const {
 			return l / size.x * size_x;
 		}
 
-		inline float length_to_pixels_y(float l) {
+		inline float length_to_pixels_y(float l) const {
 			return l / size.z * size_y;
 		}
 
-		inline float pixels_to_length_x(float pix) {
+		inline float pixels_to_length_x(float pix) const {
 			return pix / size_x * size.x;
 		}
 
-		inline float pixels_to_length_y(float pix) {
+		inline float pixels_to_length_y(float pix) const {
 			return pix / size_y * size.z;
 		}
 	};

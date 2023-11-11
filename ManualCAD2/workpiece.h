@@ -42,7 +42,7 @@ namespace ManualCAD
 
 		void bind_with(Object& object) override {}
 		void remove_binding_with(Object& object) override {}
-		float intersect_with_ray(const Vector3& origin, const Vector3& ray) override { return NAN; }
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
 		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
 
 		void replace_child_by(Object& child, Object& other) override {}
