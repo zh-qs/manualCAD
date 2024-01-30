@@ -12,15 +12,16 @@
 namespace ManualCAD
 {
 	class HeightMapRenderer {
-		static constexpr int TEX_DIM = 2000; // TODO 1000 suffices
+		static constexpr int TEX_DIM = 2000;
 
 		FrameBuffer fbo;
 		RenderTexMap texture;
 		Renderer renderer; // doesn't have to be initialized
 
+		float offset;
 		const std::list<const ParametricSurfaceObject*>& surfaces;
 	public:
-		HeightMapRenderer(const std::list<const ParametricSurfaceObject*>& surfaces, const Box& box);
+		HeightMapRenderer(const std::list<const ParametricSurfaceObject*>& surfaces, const Box& box, float offset = 0);
 		~HeightMapRenderer();
 		HeightMap render_height_map(const Vector3& size);
 		HeightMap render_index_map(const Vector3& size);

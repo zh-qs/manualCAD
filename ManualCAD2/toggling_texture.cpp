@@ -2,6 +2,7 @@
 #include "object.h"
 #include <glad/glad.h>
 #include <stack>
+#include "square_map_algorithms.h"
 
 namespace ManualCAD
 {
@@ -12,14 +13,11 @@ namespace ManualCAD
 
 		Image(int width, int height) : width(width), height(height), pixels(width* height) {}
 		inline Vector4& pixel(int x, int y) { return pixels[x + y * width]; }
+		inline const Vector4& get_pixel(int x, int y) const { return pixels[x + y * width]; }
+		inline void set_pixel(int x, int y, const Vector4& value) { pixel(x, y) = value; }
 	};
 
-	float pix_to_coord(const Range<float>& range, int pixel, int dim)
-	{
-		return pixel * (range.to - range.from) / dim + range.from;
-	}
-
-	void flood_fill(Image& image, int x, int y, const Vector4& color, const ParametricSurfaceObject& surf)
+	/*void flood_fill(Image& image, int x, int y, const Vector4& color, const ParametricSurfaceObject& surf)
 	{
 		const auto old = image.pixel(x, y);
 		if (color == old) return;
@@ -52,7 +50,7 @@ namespace ManualCAD
 			if (coords.second == image.height - 1 && surf.v_wraps_at_u(pix_to_coord(urange, coords.first, image.width)) && image.pixel(coords.first, 0) == old)
 				stack.push({ coords.first, 0 });
 		}
-	}
+	}*/
 
 	void TogglingTexture::clear()
 	{
@@ -115,7 +113,7 @@ namespace ManualCAD
 			new_color = { 0.0f, 0.0f, 0.0f, 0.0f };
 		else
 			new_color = { 0.0f, 0.0f, 1.0f, 1.0f };
-		flood_fill(image, x, y, new_color, surf);
+		SquareMapAlgorithms::flood_fill(image, x, y, new_color, surf);
 		texture.set_image(tex_width, tex_height, image.pixels.data());
 	}
 }

@@ -212,16 +212,8 @@ namespace ManualCAD
 		return result;
 	}
 
-
-	void BezierC2Curve::generate_renderable()
+	std::vector<Vector3> BezierC0Curve::get_bezier_points() const
 	{
-		if (points.size() <= 3)
-		{
-			bernstein_points->set_points({});
-			curve.set_data({});
-			return;
-		}
-
 		std::vector<Vector3> positions;
 		positions.reserve(points.size());
 
@@ -230,17 +222,13 @@ namespace ManualCAD
 			positions.push_back((*it)->get_const_position());
 		}
 
-		std::vector<Vector3> bezier(3 * (points.size() - 3) + 1);
+		return positions;
+	}
 
-		// to z æwiczeñ
-		for (int i = 0; i < positions.size() - 3; ++i)
-		{
-			bezier[3 * i] = (positions[i] + positions[i + 2] + 4.0f * positions[i + 1]) / 6.0f;
-			bezier[3 * i + 1] = (positions[i + 2] + 2.0f * positions[i + 1]) / 3.0f;
-			bezier[3 * i + 2] = (2.0f * positions[i + 2] + positions[i + 1]) / 3.0f;
-		}
-		int i = positions.size() - 3;
-		bezier[bezier.size() - 1] = (positions[i] + positions[i + 2] + 4.0f * positions[i + 1]) / 6.0f;
+
+	void BezierC2Curve::generate_renderable()
+	{
+		auto bezier = get_bezier_points();
 
 		curve.generate_curve(bezier, polyline_visible, curve_visible);
 		curve.color = color;
@@ -361,6 +349,34 @@ namespace ManualCAD
 		return result;
 	}
 
+	std::vector<Vector3> BezierC2Curve::get_bezier_points() const
+	{
+		if (points.size() <= 3)
+			return {};
+
+		std::vector<Vector3> positions;
+		positions.reserve(points.size());
+
+		for (auto it = points.begin(); it != points.end(); ++it)
+		{
+			positions.push_back((*it)->get_const_position());
+		}
+
+		std::vector<Vector3> bezier(3 * (points.size() - 3) + 1);
+
+		// to z æwiczeñ
+		for (int i = 0; i < positions.size() - 3; ++i)
+		{
+			bezier[3 * i] = (positions[i] + positions[i + 2] + 4.0f * positions[i + 1]) / 6.0f;
+			bezier[3 * i + 1] = (positions[i + 2] + 2.0f * positions[i + 1]) / 3.0f;
+			bezier[3 * i + 2] = (2.0f * positions[i + 2] + positions[i + 1]) / 3.0f;
+		}
+		int i = positions.size() - 3;
+		bezier[bezier.size() - 1] = (positions[i] + positions[i + 2] + 4.0f * positions[i + 1]) / 6.0f;
+
+		return bezier;
+	}
+
 	void PointCollection::generate_renderable()
 	{
 		set.set_data(points);
@@ -398,89 +414,7 @@ namespace ManualCAD
 		curve.color = color;
 		curve.polyline_color = polyline_color;
 
-		if (points.size() <= 1)
-		{
-			curve.set_data({});
-			return;
-		}
-
-		std::vector<Vector3> positions;
-		positions.reserve(points.size());
-		Vector3 prev_pos = Vector3::nan();
-
-		for (auto it = points.begin(); it != points.end(); ++it)
-		{
-			const Vector3 current_pos = (*it)->get_const_position();
-			if (current_pos != prev_pos)
-				positions.push_back(current_pos);
-			prev_pos = current_pos;
-		}
-
-		if (positions.size() <= 2)
-		{
-			std::vector<Vector3> positions_to_curve(4);
-			positions_to_curve[0] = positions[0];
-			if (positions.size() == 2)
-				positions_to_curve[1] = positions[1];
-			else
-				positions_to_curve[1] = Vector3::nan();
-			positions_to_curve[3] = positions_to_curve[2] = Vector3::nan();
-			curve.generate_curve(positions_to_curve, polyline_visible, curve_visible);
-			return;
-		}
-
-		int n = positions.size() - 2;
-		TridiagonalLinearEquationSystem<Vector3> eqs(n);
-		for (int i = 0; i < n; ++i)
-		{
-			eqs.main_diagonal_element(i) = 2.0f;
-		}
-		for (int i = 1; i < n; ++i)
-		{
-			Vector3 di = positions[i + 2] - positions[i + 1];
-			Vector3 dim1 = positions[i + 1] - positions[i];
-			eqs.lower_diagonal_element(i) = dim1.length() / (dim1.length() + di.length());
-		}
-		for (int i = 0; i < n - 1; ++i)
-		{
-			Vector3 di = positions[i + 2] - positions[i + 1];
-			Vector3 dim1 = positions[i + 1] - positions[i];
-			eqs.upper_diagonal_element(i) = di.length() / (dim1.length() + di.length());
-		}
-		for (int i = 0; i < n; ++i)
-		{
-			Vector3 di = positions[i + 2] - positions[i + 1];
-			Vector3 dim1 = positions[i + 1] - positions[i];
-			eqs.free_term(i) = 3 * (di / di.length() - dim1 / dim1.length()) / (dim1.length() + di.length());
-		}
-
-		auto solution = eqs.solve();
-
-		std::vector<Vector3> bezier(3 * (positions.size() - 1) + 1);
-		std::vector<Vector3> b(positions.size() - 1);
-		std::vector<Vector3> c(positions.size());
-		for (int i = 0; i < positions.size() - 1; ++i)
-		{
-			c[i] = i == 0 ? Vector3{ 0.0f, 0.0f, 0.0f } : solution[i - 1];
-		}
-		c[positions.size() - 1] = Vector3{ 0.0f,0.0f,0.0f };
-		for (int i = 0; i < positions.size() - 1; ++i)
-		{
-			Vector3 di = positions[i + 1] - positions[i];
-			float dil = di.length();
-			b[i] = di / dil - dil * (2.0f * c[i] + c[i + 1]) / 3.0f;
-		}
-		for (int i = 0; i < positions.size() - 1; ++i)
-		{
-			Vector3 di = positions[i + 1] - positions[i];
-			float dil = di.length();
-			bezier[3 * i] = positions[i];
-			bezier[3 * i + 1] = positions[i] + dil * b[i] / 3.0f;
-			bezier[3 * i + 2] = positions[i] + 2.0f * dil * b[i] / 3.0f + dil * dil * c[i] / 3.0f;
-		}
-		bezier[bezier.size() - 1] = positions[positions.size() - 1];
-
-		curve.generate_curve(bezier, polyline_visible, curve_visible);
+		curve.generate_curve(get_bezier_points(), polyline_visible, curve_visible);
 	}
 
 	void InterpolationSpline::build_specific_settings(ObjectSettingsWindow& parent)
@@ -540,6 +474,89 @@ namespace ManualCAD
 		handle->curve_visible = curve_visible;
 		result.push_back(std::move(handle));
 		return result;
+	}
+
+	std::vector<Vector3> InterpolationSpline::get_bezier_points() const
+	{
+		if (points.size() <= 1)
+			return {};
+
+		std::vector<Vector3> positions;
+		positions.reserve(points.size());
+		Vector3 prev_pos = Vector3::nan();
+
+		for (auto it = points.begin(); it != points.end(); ++it)
+		{
+			const Vector3 current_pos = (*it)->get_const_position();
+			if (current_pos != prev_pos)
+				positions.push_back(current_pos);
+			prev_pos = current_pos;
+		}
+
+		if (positions.size() <= 2)
+		{
+			std::vector<Vector3> positions_to_curve(4);
+			positions_to_curve[0] = positions[0];
+			if (positions.size() == 2)
+				positions_to_curve[1] = positions[1];
+			else
+				positions_to_curve[1] = Vector3::nan();
+			positions_to_curve[3] = positions_to_curve[2] = Vector3::nan();
+			return positions_to_curve;
+		}
+
+		int n = positions.size() - 2;
+		TridiagonalLinearEquationSystem<Vector3> eqs(n);
+		for (int i = 0; i < n; ++i)
+		{
+			eqs.main_diagonal_element(i) = 2.0f;
+		}
+		for (int i = 1; i < n; ++i)
+		{
+			Vector3 di = positions[i + 2] - positions[i + 1];
+			Vector3 dim1 = positions[i + 1] - positions[i];
+			eqs.lower_diagonal_element(i) = dim1.length() / (dim1.length() + di.length());
+		}
+		for (int i = 0; i < n - 1; ++i)
+		{
+			Vector3 di = positions[i + 2] - positions[i + 1];
+			Vector3 dim1 = positions[i + 1] - positions[i];
+			eqs.upper_diagonal_element(i) = di.length() / (dim1.length() + di.length());
+		}
+		for (int i = 0; i < n; ++i)
+		{
+			Vector3 di = positions[i + 2] - positions[i + 1];
+			Vector3 dim1 = positions[i + 1] - positions[i];
+			eqs.free_term(i) = 3 * (di / di.length() - dim1 / dim1.length()) / (dim1.length() + di.length());
+		}
+
+		auto solution = eqs.solve();
+
+		std::vector<Vector3> bezier(3 * (positions.size() - 1) + 1);
+		std::vector<Vector3> b(positions.size() - 1);
+		std::vector<Vector3> c(positions.size());
+		for (int i = 0; i < positions.size() - 1; ++i)
+		{
+			c[i] = i == 0 ? Vector3{ 0.0f, 0.0f, 0.0f } : solution[i - 1];
+		}
+		c[positions.size() - 1] = Vector3{ 0.0f,0.0f,0.0f };
+		for (int i = 0; i < positions.size() - 1; ++i)
+		{
+			Vector3 di = positions[i + 1] - positions[i];
+			float dil = di.length();
+			b[i] = di / dil - dil * (2.0f * c[i] + c[i + 1]) / 3.0f;
+		}
+		for (int i = 0; i < positions.size() - 1; ++i)
+		{
+			Vector3 di = positions[i + 1] - positions[i];
+			float dil = di.length();
+			bezier[3 * i] = positions[i];
+			bezier[3 * i + 1] = positions[i] + dil * b[i] / 3.0f;
+			bezier[3 * i + 2] = positions[i] + 2.0f * dil * b[i] / 3.0f + dil * dil * c[i] / 3.0f;
+		}
+		bezier[bezier.size() - 1] = positions[positions.size() - 1];
+
+		return bezier;
 	}
 
 	void BicubicC0BezierSurface::generate_renderable()

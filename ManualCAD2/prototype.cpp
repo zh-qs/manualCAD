@@ -6,6 +6,7 @@
 #include "surface_path.h"
 #include "offset_surface.h"
 #include "rough_path.h"
+#include "curve_path.h"
 
 namespace ManualCAD
 {
@@ -30,6 +31,16 @@ namespace ManualCAD
 	Vector3 Prototype::elevate(const Vector3& point)
 	{
 		return { point.x,safe_height(),point.z };
+	}
+
+	Vector3 Prototype::elevate_to(const Vector3& point, const float h)
+	{
+		return { point.x,h,point.z };
+	}
+
+	Vector3 Prototype::elevate_to_rough(const Vector3& point)
+	{
+		return { point.x,height_after_rough(),point.z };
 	}
 
 	Vector3 Prototype::elevate(const Vector2& point)
@@ -93,13 +104,51 @@ namespace ManualCAD
 		return result;
 	}
 
-	std::vector<Vector3> Prototype::link_surface_ball_cutter_paths(const std::vector<std::vector<std::vector<Vector2>>>& paths, const float radius)
+	std::vector<Vector3> Prototype::link_paths(const std::vector<std::vector<Vector3>>& paths)
+	{
+		const Vector2 min = { view_boundary_points[0].x, view_boundary_points[0].z },
+			max = { view_boundary_points[2].x, view_boundary_points[2].z };
+		float height = view_boundary_points[0].y + scale * signature_depth;
+
+		std::vector<Vector3> result;
+
+		size_t point_count = 2;
+		for (const auto& path : paths)
+			point_count += path.size() + 2;
+		result.reserve(point_count);
+
+		result.push_back(elevate(0.5f * (min + max)));
+		
+		for (const auto& path : paths)
+		{
+			result.push_back(elevate_to(path.front(), height));
+			result.insert(result.end(), path.begin(), path.end());
+			result.push_back(elevate_to(path.back(), height));
+		}
+
+		result.push_back(elevate(0.5f * (min + max)));
+
+		// correct y coordinate of second and before-last element (elevate to safe height)
+		result[1].y = safe_height();
+		result[result.size() - 2].y = safe_height();
+
+		to_workpiece_coords(result);
+
+		if constexpr (ApplicationSettings::DEBUG)
+			assert(result.size() == point_count);
+
+		return result;
+	}
+
+	std::vector<Vector3> Prototype::link_surface_ball_cutter_paths(const std::vector<std::vector<std::vector<Vector2>>>& paths, const float radius, const PlaneXZ& plane)
 	{
 		const Vector2 min = { view_boundary_points[0].x, view_boundary_points[0].z },
 			max = { view_boundary_points[2].x, view_boundary_points[2].z };
 		const float height = view_boundary_points[0].y;
 
-		std::vector<std::list<Vector3>> surface_results(surfaces.size());
+		std::vector<std::list<Vector3>> surface_results(surfaces.size() + 1); // plus 1 because we also make paths for plane
+
+		// paths for surfaces
 		int i = 0;
 		for (const auto* surf : surfaces)
 		{
@@ -114,14 +163,27 @@ namespace ManualCAD
 					for (float t = 0.0f; t <= d; t += step)
 					{
 						auto uv = lerp(path[j], path[j + 1], t);
-						path3d.push_back(offset_surf.evaluate(uv.x, uv.y));
-					}
+						path3d.push_back(offset_surf.evaluate(uv.x, uv.y) - Vector3{0.0f, radius, 0.0f}); // VERY important: subtract radius from position (because of ball cutter: curves mark movement of its center)
+					}	
 				}
-				path3d.push_front(elevate(path3d.front()));
-				path3d.push_back(elevate(path3d.back()));
+				//for (int j = 0; j < path.size(); ++j) // improper: only for zig-zag testing
+				//	path3d.push_back(offset_surf.evaluate(path[j].x, path[j].y));
+				path3d.push_front(elevate_to_rough(path3d.front()));
+				path3d.push_back(elevate_to_rough(path3d.back()));
 				surface_results[i].insert(surface_results[i].begin(), path3d.begin(), path3d.end());
 			}
 			++i;
+		}
+
+		// paths for plane
+		for (const auto& path : paths.back())
+		{
+			std::list<Vector3> path3d;
+			for (int j = 0; j < path.size(); ++j)
+				path3d.push_back(plane.evaluate(path[j].x, path[j].y) - Vector3{ 0.0f, radius, 0.0f });
+			path3d.push_front(elevate_to_rough(path3d.front()));
+			path3d.push_back(elevate_to_rough(path3d.back()));
+			surface_results[i].insert(surface_results[i].begin(), path3d.begin(), path3d.end());
 		}
 
 		size_t point_count = 2;
@@ -267,7 +329,7 @@ namespace ManualCAD
 		const Vector2 min = { view_boundary_points[0].x, view_boundary_points[0].z },
 			max = { view_boundary_points[2].x, view_boundary_points[2].z };
 		RoughPath path{ surfaces, center, min, max, size.y - mill_height, size.y, scale };
-		auto points = path.generate_path(2, size, cutter.get_radius(), cutter.get_radius() * epsilon_factor, epsilon_factor);
+		auto points = path.generate_path(2, size, cutter.get_radius(), cutter.get_radius() * rough_epsilon_factor, rough_height_offset);
 
 		compact_path(points);
 
@@ -291,17 +353,27 @@ namespace ManualCAD
 		PlaneXZ plane{ min - cutter_offset, max + cutter_offset, height };
 		PolygonEnvelope::Builder envelope_builder;
 
+		const float radius = scale * cutter.get_radius();
+
 		for (const auto* surf : surfaces)
 		{
-			auto intersection = ParametricSurfaceIntersection::intersect_surfaces_without_hint(*surf, plane, 0.01f, 2500, 20, 20, true);
-			envelope_builder.add_polygon(intersection.get_uvs2());
+			OffsetSurface offset_surf{ *surf, radius };
+			try
+			{
+				auto intersection = ParametricSurfaceIntersection::intersect_surfaces_without_hint(offset_surf, plane, 0.01f, 2500, 20, 20, true);
+				envelope_builder.add_polygon(intersection.get_uvs2());
+			}
+			catch (const CommonIntersectionPointNotFoundException&)
+			{
+				// nothing
+			}
 		}
 		auto envelope = envelope_builder.build();
-		envelope.expand(scale * cutter.get_radius() * (1.0f + epsilon_factor)); // TODO coœ lepszego ¿eby nie podcina³o
+		//envelope.expand(scale * cutter.get_radius() * (1.0f + epsilon_factor)); // TODO coœ lepszego ¿eby nie podcina³o
 
 		ZigZagPath zigzag;
 		zigzag.add_line(envelope.get_points(), true);
-		auto paths = zigzag.generate_paths_outside_loops(min - cutter_offset, max + cutter_offset, scale * cutter.get_radius(), scale * cutter.get_radius() * 5.0f * epsilon_factor); // TODO AAAAA
+		auto paths = zigzag.generate_paths_outside_loops(min - cutter_offset, max + cutter_offset, scale * cutter.get_radius(), scale * cutter.get_radius() * flat_epsilon_factor);
 
 		std::vector<Vector3> points = link_flat_paths(paths);
 		points = compact_path(points);
@@ -320,13 +392,23 @@ namespace ManualCAD
 		PlaneXZ plane{ min - cutter_offset, max + cutter_offset, height };
 		PolygonEnvelope::Builder envelope_builder;
 
+		const float radius = scale * cutter.get_radius();
+
 		for (const auto* surf : surfaces)
 		{
-			auto intersection = ParametricSurfaceIntersection::intersect_surfaces_without_hint(*surf, plane, 0.01f, 2500, 20, 20, true);
-			envelope_builder.add_polygon(intersection.get_uvs2());
+			OffsetSurface offset_surf{ *surf, radius };
+			try
+			{
+				auto intersection = ParametricSurfaceIntersection::intersect_surfaces_without_hint(offset_surf, plane, 0.01f, 2500, 20, 20, true);
+				envelope_builder.add_polygon(intersection.get_uvs2());
+			}
+			catch (const CommonIntersectionPointNotFoundException&)
+			{
+				// nothing
+			}
 		}
 		auto envelope = envelope_builder.build();
-		envelope.expand(scale * cutter.get_radius());
+		//envelope.expand(scale * cutter.get_radius()); we do not expane if we use offset surfaces
 
 		std::vector<Vector3> points = link_single_flat_loop(envelope.get_points());
 		points = compact_path(points);
@@ -341,13 +423,13 @@ namespace ManualCAD
 		const Vector2 min = { view_boundary_points[0].x, view_boundary_points[0].z },
 			max = { view_boundary_points[2].x, view_boundary_points[2].z };
 		const float height = view_boundary_points[0].y;
-		PlaneXZ plane{ min, max, height };
-
 		const float radius = scale * cutter.get_radius();
-		auto lines = SurfacePath{ surfaces }.generate_paths(plane, radius, radius * detailed_epsilon_factor, scale * mill_height, size);
-		auto points = link_surface_ball_cutter_paths(lines, radius);
+		PlaneXZ plane{ min, max, height + radius }; // we offset plane by radius (because cutter must not cut the flat plane)
 
-		//result = compact_path(result);
+		auto lines = SurfacePath{ surfaces }.generate_paths(plane, radius, radius * detailed_epsilon_factor, scale * mill_height, size);
+		auto points = link_surface_ball_cutter_paths(lines, radius, plane);
+
+		points = compact_path(points);
 		generated_program = MillingProgram{ "Detailed" };
 		for (int i = 0; i < points.size() - 1; ++i)
 			generated_program.value().add_move({ i + 3,false,points[i],points[i + 1] });
@@ -355,7 +437,24 @@ namespace ManualCAD
 
 	void Prototype::generate_signature_program(const Cutter& cutter)
 	{
-		throw std::runtime_error("TODO");
+		if (signature_curves.size() == 0)
+			return;
+
+		CurvePath path;
+
+		for (const auto* curve : signature_curves)
+			path.add_curve_bezier_points(curve->get_bezier_points());
+
+		const float base_height = view_boundary_points[0].y - scale * signature_depth;
+
+		path.project_curves(base_height);
+
+		auto lines = path.generate_paths();
+		auto points = link_paths(lines);
+
+		generated_program = MillingProgram{ "Signature" };
+		for (int i = 0; i < points.size() - 1; ++i)
+			generated_program.value().add_move({ i + 3,false,points[i],points[i + 1] });
 	}
 
 	void Prototype::update_view()

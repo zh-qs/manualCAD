@@ -35,6 +35,9 @@ namespace ManualCAD
 	public:
 		void add_line(const std::vector<Vector2>& line, bool looped) { lines.push_back({ line, looped }); }
 		std::vector<std::vector<Vector2>> generate_paths_outside_loops(const Vector2& min, const Vector2& max, const float radius, const float epsilon) const;
+		std::vector<std::vector<Vector2>> generate_paths_outside_loops(const Range<float>& urange, const Range<float>& vrange, const float radius, const float epsilon) {
+			return generate_paths_outside_loops(Vector2{ urange.from, vrange.from }, Vector2{ urange.to, vrange.to }, radius, epsilon);
+		}
 		std::vector<std::vector<Vector2>> generate_paths_excluding_segments(const Vector2& min, const Vector2& max, const float radius, const float epsilon, const SegmentCheck& check) const;
 		std::vector<std::vector<Vector2>> generate_paths_excluding_segments(const Range<float>& urange, const Range<float>& vrange, const float radius, const float epsilon, const SegmentCheck& check) const {
 			return generate_paths_excluding_segments(Vector2{ urange.from, vrange.from }, Vector2{ urange.to, vrange.to }, radius, epsilon, check);

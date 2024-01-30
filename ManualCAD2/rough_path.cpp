@@ -8,7 +8,7 @@ namespace ManualCAD
 {
 	HeightMap RoughPath::render_height_map(const Vector3& size)
 	{
-		HeightMapRenderer r{ surfaces, box };
+		HeightMapRenderer r{ surfaces, box }; // TODO add offset = radius + epsilon and remove weird algorithms!
 		return r.render_height_map(size);
 	}
 

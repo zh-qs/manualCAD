@@ -231,6 +231,9 @@
     <ClCompile Include="height_map_renderer.cpp">
       <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
     </ClCompile>
+    <ClCompile Include="curve_path.cpp">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glApplication.h">
@@ -425,9 +428,6 @@
     <ClInclude Include="rough_path.h">
       <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
     </ClInclude>
-    <ClInclude Include="offset_surface.h">
-      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
-    </ClInclude>
     <ClInclude Include="surface_path.h">
       <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
     </ClInclude>
@@ -439,6 +439,24 @@
     </ClInclude>
     <ClInclude Include="height_map_renderer.h">
       <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="square_map_algorithms.h">
+      <Filter>Pliki źródłowe\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="offset_surface.h">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="uv_switched_surface.h">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="curve_path.h">
+      <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
+    </ClInclude>
+    <ClInclude Include="polynomial_algorithms.h">
+      <Filter>Pliki źródłowe\maths</Filter>
+    </ClInclude>
+    <ClInclude Include="parametric_curve.h">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -525,6 +543,12 @@
       <Filter>Pliki źródłowe\shaders</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="height_map_fragment_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="bezier_patch_offset_tess_eval_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="de_boor_patch_offset_tess_eval_shader.glsl">
       <Filter>Pliki źródłowe\shaders</Filter>
     </CopyFileToFolders>
   </ItemGroup>

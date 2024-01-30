@@ -1,5 +1,6 @@
 #include "zig_zag_path.h"
 #include "planimetrics.h"
+#include "logger.h"
 
 namespace ManualCAD
 {
@@ -80,17 +81,23 @@ namespace ManualCAD
 			PathSegment s;
 			s.y = min.y + i * row_width;
 			s.start = { min.x, nullptr, -1 };
+			bool prev_check_successful = false; // we use this flag to discard false-positives after intersection
 
 			for (const auto& isec : intersections[i])
 			{
 				s.end = isec;
-				if (check({ s.start.x, s.y }, { s.end.x,s.y }))
+				if (!prev_check_successful && check({ s.start.x, s.y }, { s.end.x,s.y }))
+				{
+					prev_check_successful = true;
 					zigzag_segments[i].push_back(s);
+				}
+				else
+					prev_check_successful = false;
 				s.start = isec;
 			}
 
 			s.end = { max.x, nullptr, -1 };
-			if (check({ s.start.x, s.y }, { s.end.x,s.y }))
+			if (!prev_check_successful && check({ s.start.x, s.y }, { s.end.x,s.y }))
 				zigzag_segments[i].push_back(s);
 		}
 		return zigzag_segments;
@@ -98,6 +105,8 @@ namespace ManualCAD
 
 	std::vector<std::vector<Vector2>> ZigZagPath::link_segments_and_create_paths(std::vector<std::vector<PathSegment>>& zigzag_segments, const Vector2& min, const Vector2& max, const float& row_width) const
 	{
+		constexpr float EPS = 10e-3;
+
 		const size_t rows = zigzag_segments.size();
 		std::vector<std::vector<Vector2>> lists;
 		std::list<Vector2> current_list;
@@ -116,7 +125,7 @@ namespace ManualCAD
 			bool early_break = false;
 			for (; i < rows - 1; ++i)
 			{
-				const float next_ycoord = min.y + (i + 2) * row_width;
+				const float next_ycoord = min.y + (i + 1) * row_width;
 				const PathSegment seg = zigzag_segments[i][next_idx];
 				zigzag_segments[i].erase(zigzag_segments[i].begin() + next_idx);
 				while (first_not_empty < rows && zigzag_segments[first_not_empty].empty())
@@ -139,22 +148,36 @@ namespace ManualCAD
 					{
 						const auto& line = *seg.end.line;
 						int idx = seg.end.idx;
+						int prev_idx = idx;
 						int dir;
 						if (line.looped)
 						{
 							if (line.points[(idx + 1) % line.points.size()].y >= line.points[idx].y)
+							{
 								dir = 1;
+								idx = (idx + 1) % line.points.size();
+							}
 							else
+							{
 								dir = -1;
+								prev_idx = (prev_idx + 1) % line.points.size();
+							}
 						}
 						else
 						{
 							if (line.points[idx + 1].y >= line.points[idx].y)
+							{
 								dir = 1;
+								++idx;
+							}
 							else
+							{
 								dir = -1;
+								++prev_idx;
+							}
 						}
-						int prev_idx = (idx - dir) % line.points.size(); // TODO is non-looped also ok?
+						const int first_idx = idx;
+						//int prev_idx = (idx - dir) % line.points.size(); // TODO is non-looped also ok? // replaced by setting idx "after"(?) intersection
 						while (line.points[idx].y < next_ycoord && line.points[prev_idx].y < line.points[idx].y)
 						{
 							current_list.push_back(line.points[idx]); // ***
@@ -164,6 +187,7 @@ namespace ManualCAD
 								break;
 							idx = new_idx;
 						}
+						// TODO: the same condition as below is commented in 'else' branch; which is correct?
 						if (idx < 0 || idx >= line.points.size() || line.points[prev_idx].y >= line.points[idx].y) // end of zigzag
 						{
 							early_break = true;
@@ -180,6 +204,33 @@ namespace ManualCAD
 								nearest_x = zigzag_segments[i + 1][j].end.x;
 								next_idx = j;
 							}
+						}
+
+						// eliminate points who went too far (near intersection of 3 surfaces)
+						/*const float first_x = line.points[first_idx].x;
+						if (first_x < nearest_x && target_x - nearest_x > EPS)
+							while (current_list.back().x - nearest_x > EPS)
+								current_list.pop_back();
+						else if (first_x > nearest_x && nearest_x - target_x > EPS)
+							while (nearest_x - current_list.back().x > EPS)
+								current_list.pop_back();
+						else*/ if (std::abs(target_x - nearest_x) > EPS)
+						{
+							// intersect fragment of created line with other line and combine them
+							const auto* line2 = zigzag_segments[i + 1][next_idx].end.line;
+							try
+							{
+								auto intersection = Planimetrics::find_first_intersection(line.points, first_idx, idx, line.looped, dir, line2->points, line2->looped); // this is exception-generating when segments are malformed, think about something more robust
+								while (current_list.back().y - intersection.y > 0.0f)
+									current_list.pop_back(); // discard line fragments after intersection
+							}
+							catch (const CommonIntersectionPointNotFoundException&)
+							{
+								Logger::log_warning("[WARNING] Intersection of overlapping paths not found; maybe because of ill-formed segment pass conditions? Paths may not be accurate. Please contact with a helpdesk\n");
+							}
+							
+							// we should now go along second line but wait, this will work in our model XD
+							// TODO of course
 						}
 					}
 					left_to_right = false;
@@ -201,22 +252,36 @@ namespace ManualCAD
 					{
 						const auto& line = *seg.start.line;
 						int idx = seg.start.idx;
+						int prev_idx = idx;
 						int dir;
 						if (line.looped)
 						{
 							if (line.points[(idx + 1) % line.points.size()].y >= line.points[idx].y)
+							{
 								dir = 1;
+								idx = (idx + 1) % line.points.size();
+							}
 							else
+							{
 								dir = -1;
+								prev_idx = (prev_idx + 1) % line.points.size();
+							}
 						}
 						else
 						{
 							if (line.points[idx + 1].y >= line.points[idx].y)
+							{
 								dir = 1;
+								++idx;
+							}
 							else
+							{
 								dir = -1;
+								++prev_idx;
+							}
 						}
-						int prev_idx = (idx - dir) % line.points.size(); // TODO is non-looped also ok?
+						const int first_idx = idx;
+						//int prev_idx = (idx - dir) % line.points.size(); // TODO is non-looped also ok? // replaced by setting idx "after"(?) intersection
 						while (line.points[idx].y < next_ycoord && line.points[prev_idx].y < line.points[idx].y)
 						{
 							current_list.push_back(line.points[idx]); // ***
@@ -242,6 +307,26 @@ namespace ManualCAD
 								nearest_x = zigzag_segments[i + 1][j].start.x;
 								next_idx = j;
 							}
+						}
+
+						// eliminate points who went too far (near intersection of 3 surfaces)
+						// TODO: replace this with finding intersections of lines and then changing line when intersection met
+						/*const float first_x = line.points[first_idx].x;
+						if (first_x < nearest_x && target_x - nearest_x > EPS)
+							while (current_list.back().x - nearest_x > EPS)
+								current_list.pop_back();
+						else if (first_x > nearest_x && nearest_x - target_x > EPS)
+							while (nearest_x - current_list.back().x > EPS)
+								current_list.pop_back();
+						else*/ if (std::abs(target_x - nearest_x) > EPS)
+						{
+							// intersect fragment of created line with other line and combine them
+							const auto* line2 = zigzag_segments[i + 1][next_idx].start.line;
+							auto intersection = Planimetrics::find_first_intersection(line.points, first_idx, idx, line.looped, dir, line2->points, line2->looped);
+							while (current_list.back().y - intersection.y > 0.0f)
+								current_list.pop_back(); // discard line fragments after intersection
+							// we should now go along second line but wait, this will work in our model XD
+							// TODO of course
 						}
 					}
 					left_to_right = true;

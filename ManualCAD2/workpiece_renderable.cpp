@@ -6,13 +6,13 @@ namespace ManualCAD
 	void WorkpieceRenderable::set_data_from_map(HeightMap& height_map)
 	{
 		texture.bind();
-		texture.set_image(height_map.size_x, height_map.size_y, height_map.data());
+		texture.set_image(height_map.width, height_map.height, height_map.data());
 
-		if (divisions_x != height_map.size_x || divisions_y != height_map.size_y)
+		if (divisions_x != height_map.width || divisions_y != height_map.height)
 		{
 			// generate workpiece model
-			divisions_x = height_map.size_x;
-			divisions_y = height_map.size_y;
+			divisions_x = height_map.width;
+			divisions_y = height_map.height;
 
 			//std::vector<Vector3> vertices((divisions_x + 2) * (divisions_y + 2));
 			std::vector<Vector2> uvs((divisions_x + 2) * (divisions_y + 2));

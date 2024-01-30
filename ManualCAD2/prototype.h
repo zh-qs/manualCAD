@@ -2,9 +2,12 @@
 
 #include "object.h"
 #include "milling_program.h"
+#include "plane_xz.h"
 #include "cutter.h"
 #include <memory>
 #include <optional>
+#include <vector>
+#include <list>
 
 namespace ManualCAD
 {
@@ -25,6 +28,7 @@ namespace ManualCAD
 		float mill_height = 1.95f;
 		Vector3 size = { 15, 5, 15 };
 		std::list<const ParametricSurfaceObject*> surfaces;
+		std::list<const ParametricCurveObject*> signature_curves;
 
 		std::optional<MillingProgram> generated_program = std::nullopt;
 
@@ -32,8 +36,11 @@ namespace ManualCAD
 		bool box_valid = false;
 
 		float scale = 0.0f;
-		float epsilon_factor = 0.1f;
+		float rough_epsilon_factor = 1.0f;
+		float rough_height_offset = 0.2f;
+		float flat_epsilon_factor = 0.5f;
 		float detailed_epsilon_factor = 1.81f;
+		float signature_depth = 0.1f;
 
 		void generate_renderable() override;
 		void build_specific_settings(ObjectSettingsWindow& parent) override;
@@ -42,12 +49,17 @@ namespace ManualCAD
 		Vector3 to_workpiece_coords(const Vector3& model_coords) { return (1.0f / scale) * (model_coords - center); }
 		float safe_height_unscaled() const { return size.y + 1.0f; }
 		float safe_height() const { return scale * safe_height_unscaled() + center.y; }
+		float height_after_rough_unscaled() const { return size.y + rough_height_offset; }
+		float height_after_rough() const { return scale * height_after_rough_unscaled() + center.y; }
 
 		std::vector<Vector3> leap(const Vector2& from, const Vector2& to);
 		Vector3 elevate(const Vector3& point);
+		Vector3 elevate_to(const Vector3& point, const float h);
+		Vector3 elevate_to_rough(const Vector3& point);
 		Vector3 elevate(const Vector2& point);
 		std::vector<Vector3> link_flat_paths(const std::vector<std::vector<Vector2>>& paths);
-		std::vector<Vector3> link_surface_ball_cutter_paths(const std::vector<std::vector<std::vector<Vector2>>>& paths, const float radius);
+		std::vector<Vector3> link_paths(const std::vector<std::vector<Vector3>>& paths);
+		std::vector<Vector3> link_surface_ball_cutter_paths(const std::vector<std::vector<std::vector<Vector2>>>& paths, const float radius, const PlaneXZ& plane);
 		std::vector<Vector3> link_single_flat_loop(const std::vector<Vector2>& loop);
 		std::vector<Vector3> compact_path(const std::vector<Vector3>& path);
 		void to_workpiece_coords(std::vector<Vector3>& model_coords) { for (auto& c : model_coords) c = to_workpiece_coords(c); }
@@ -67,16 +79,30 @@ namespace ManualCAD
 		void bind_with(Object& object) override {
 			const ParametricSurfaceObject* surf = dynamic_cast<ParametricSurfaceObject*>(&object);
 			if (surf != nullptr)
+			{
 				surfaces.push_back(surf);
-			box_valid = false;
-			invalidate();
+				box_valid = false;
+				invalidate();
+			}
+			const ParametricCurveObject* curve = dynamic_cast<ParametricCurveObject*>(&object);
+			if (curve != nullptr)
+			{
+				signature_curves.push_back(curve);
+			}
 		}
 		void remove_binding_with(Object& object) override {
 			const ParametricSurfaceObject* surf = dynamic_cast<ParametricSurfaceObject*>(&object);
 			if (surf != nullptr)
+			{
 				surfaces.remove(surf);
-			box_valid = false;
-			invalidate();
+				box_valid = false;
+				invalidate();
+			}
+			const ParametricCurveObject* curve = dynamic_cast<ParametricCurveObject*>(&object);
+			if (curve != nullptr)
+			{
+				signature_curves.remove(curve);
+			}
 		}
 
 		void update_view();

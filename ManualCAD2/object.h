@@ -20,6 +20,7 @@
 #include "constant_parameter.h"
 #include "parametric_surface_intersection.h"
 #include "ray.h"
+#include "parametric_curve.h"
 
 namespace ManualCAD
 {
@@ -139,6 +140,11 @@ namespace ManualCAD
 	using ObjectHandle = Object::Handle<Object>;
 
 	class IntersectionCurve;
+
+	class ParametricCurveObject : public Object, public ParametricCurve {
+	public:
+		ParametricCurveObject(Renderable& renderable) : Object(renderable) {}
+	};
 
 	class ParametricSurfaceObject : public Object, public ParametricSurfaceWithSecondDerivative {
 	public:
@@ -401,7 +407,7 @@ namespace ManualCAD
 		std::vector<ObjectHandle> clone() const override;
 	};
 
-	class BezierC0Curve : public Object {
+	class BezierC0Curve : public ParametricCurveObject {
 		friend class ObjectSettings;
 		friend class Serializer;
 
@@ -418,7 +424,7 @@ namespace ManualCAD
 	public:
 		Vector4 polyline_color = { 1.0f,1.0f,1.0f,1.0f };
 
-		BezierC0Curve(const std::list<Point*>& points) : Object(curve), points(points) {
+		BezierC0Curve(const std::list<Point*>& points) : ParametricCurveObject(curve), points(points) {
 			name = "Bezier C0 Curve " + std::to_string(counter++);
 			transformable = false;
 			for (auto* p : points)
@@ -435,6 +441,8 @@ namespace ManualCAD
 		}
 
 		std::vector<ObjectHandle> clone() const override;
+
+		std::vector<Vector3> get_bezier_points() const override;
 	};
 
 	class PointCollection : public Object {
@@ -488,7 +496,7 @@ namespace ManualCAD
 		MoveAdjacent = 1
 	};
 
-	class BezierC2Curve : public Object, public Callbackable {
+	class BezierC2Curve : public ParametricCurveObject, public Callbackable {
 		friend class ObjectSettings;
 		friend class Serializer;
 
@@ -508,7 +516,7 @@ namespace ManualCAD
 	public:
 		Vector4 polyline_color = { 1.0f,1.0f,1.0f,1.0f };
 
-		BezierC2Curve(const std::vector<Point*>& points) : Object(curve), points(points) {
+		BezierC2Curve(const std::vector<Point*>& points) : ParametricCurveObject(curve), points(points) {
 			name = "Bezier C2 Curve " + std::to_string(counter++);
 			transformable = false;
 			for (auto* p : points)
@@ -534,9 +542,11 @@ namespace ManualCAD
 		}
 
 		std::vector<ObjectHandle> clone() const override;
+
+		std::vector<Vector3> get_bezier_points() const override;
 	};
 
-	class InterpolationSpline : public Object {
+	class InterpolationSpline : public ParametricCurveObject {
 		friend class ObjectSettings;
 		friend class Serializer;
 
@@ -553,7 +563,7 @@ namespace ManualCAD
 	public:
 		Vector4 polyline_color = { 1.0f,1.0f,1.0f,1.0f };
 
-		InterpolationSpline(const std::vector<Point*>& points) : Object(curve), points(points) {
+		InterpolationSpline(const std::vector<Point*>& points) : ParametricCurveObject(curve), points(points) {
 			name = "Spline " + std::to_string(counter++);
 			transformable = false;
 			for (auto* p : points)
@@ -571,6 +581,8 @@ namespace ManualCAD
 		}
 
 		std::vector<ObjectHandle> clone() const override;
+
+		std::vector<Vector3> get_bezier_points() const override;
 	};
 
 	class ObjectController;

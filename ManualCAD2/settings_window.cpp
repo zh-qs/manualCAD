@@ -9,9 +9,9 @@
 namespace ManualCAD
 {
 
-	void ObjectControllerSettingsWindow::load_model_from_file()
+	void ObjectControllerSettingsWindow::load_model_from_file(bool clear_workspace)
 	{
-		if (!check_and_confirm_unsaved())
+		if (clear_workspace && !check_and_confirm_unsaved())
 			return;
 		std::string filename;
 		try
@@ -26,7 +26,8 @@ namespace ManualCAD
 			return;
 		std::string s(filename);
 		Serializer serializer(controller, camera);
-		controller.clear_all();
+		if (clear_workspace)
+			controller.clear_all();
 		controller.set_saved();
 		try
 		{
@@ -52,6 +53,8 @@ namespace ManualCAD
 		}
 		if (filename.empty())
 			return;
+		if (filename.size() < 4 || filename.substr(filename.size() - 4, 4) != ".json")
+			filename += ".json";
 		std::string s(filename);
 		Serializer serializer(controller, camera);
 		serializer.serialize(s);

@@ -2,6 +2,7 @@
 
 #include "algebra.h"
 #include "application_settings.h"
+#include "exception.h"
 
 namespace ManualCAD
 {
@@ -70,6 +71,27 @@ namespace ManualCAD
 			const auto max1 = max(seg1start, seg1end), max2 = max(seg2start, seg2end);
 			out_point = 0.5f * (max1 + max2);
 			return true;
+		}
+
+		inline static Vector2 find_first_intersection(const std::vector<Vector2>& line, const int start, const int end, const bool looped, const int dir, const std::vector<Vector2>& other, bool other_looped) {			
+			int inext = -1;
+			for (int i = start; i != end; i = inext)
+			{
+				inext = looped ? ((i + dir) % line.size()) : (i + dir);
+				for (int j = 0; j < other.size() - 1; ++j)
+				{
+					Vector2 intersection;
+					if (intersect(line[i], line[inext], other[j], other[j + 1], intersection))
+						return intersection;
+				}
+				if (other_looped)
+				{
+					Vector2 intersection;
+					if (intersect(line[i], line[inext], other.back(), other.front(), intersection))
+						return intersection;
+				}
+			}
+			throw CommonIntersectionPointNotFoundException();
 		}
 	};
 }

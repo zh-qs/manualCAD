@@ -200,7 +200,7 @@ namespace ManualCAD
 		bool find_all_intersections = false;
 		int intersection_sample_count = 10;
 
-		void load_model_from_file();
+		void load_model_from_file(bool clear_workspace);
 		void save_model_to_file();
 
 		std::pair<ParametricSurfaceObject*, ParametricSurfaceObject*> try_get_surfaces_from_selection(bool& invalid_selection_count, bool& not_surface);
@@ -230,7 +230,10 @@ namespace ManualCAD
 						}
 					}
 					if (ImGui::MenuItem("Open")) {
-						load_model_from_file();
+						load_model_from_file(true);
+					}
+					if (ImGui::MenuItem("Add model")) {
+						load_model_from_file(false);
 					}
 					if (ImGui::MenuItem("Save")) {
 						save_model_to_file();
@@ -473,6 +476,9 @@ namespace ManualCAD
 
 				const char* proj_types[] = {"Perspective", "Ortographic"};
 				ImGui::Combo("Projection type", reinterpret_cast<int*>(&camera.projection_type), proj_types, IM_ARRAYSIZE(proj_types));
+				if (ImGui::Button("Look to XZ plane")) {
+					renderer.get_camera().set_rotation(HALF_PI, HALF_PI, 0.0f);
+				}
 
 				float fov_deg = camera.fov_rad * 180.0f / PI;
 				ImGui::SliderFloat("Near plane", &camera.near, 0.01f, 1.0f, NULL, ImGuiSliderFlags_NoInput);

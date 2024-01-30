@@ -75,18 +75,19 @@ namespace ManualCAD
 
 	ParametricSurfaceIntersection ParametricSurfaceIntersection::intersect_surfaces(const ParametricSurface& surf1, const ParametricSurface& surf2, float step, size_t max_steps, const Vector2& uv1start, const Vector2& uv2start, const bool force_loop)
 	{
+		// TODO make relative errors policy
 		static constexpr float EPS = 1e-5f;
 		/*const float relative_eps = (surf1.get_u_range().to - surf1.get_u_range().from
 			+ surf1.get_v_range().to - surf1.get_v_range().from
 			+ surf2.get_u_range().to - surf2.get_u_range().from
 			+ surf2.get_v_range().to - surf2.get_v_range().from) * 0.25f * EPS;*/
 
-			//const auto xx1 = surf1.evaluate(uv1start.x, uv1start.y), xx2 = surf2.evaluate(uv2start.x, uv2start.y), xx3 = xx1 - xx2;
+		//const auto xx1 = surf1.evaluate(uv1start.x, uv1start.y), xx2 = surf2.evaluate(uv2start.x, uv2start.y), xx3 = xx1 - xx2;
 		if (!surf1.get_u_range().contains(uv1start.x)
 			|| !surf1.get_v_range().contains(uv1start.y)
 			|| !surf2.get_u_range().contains(uv2start.x)
 			|| !surf2.get_v_range().contains(uv2start.y)
-			|| (surf1.evaluate(uv1start.x, uv1start.y) - surf2.evaluate(uv2start.x, uv2start.y)).length() >= 1e-4f)
+			|| (surf1.evaluate(uv1start.x, uv1start.y) - surf2.evaluate(uv2start.x, uv2start.y)).length() >= 1e-3f)
 			throw CommonIntersectionPointNotFoundException();
 
 		std::list<Vector2> uvs1, uvs2;
@@ -145,14 +146,14 @@ namespace ManualCAD
 
 				do
 				{
-					//try
-					//{
+					try
+					{
 					check_timeout(start_time);
-					//}
-					//catch (const TimeoutException&)
-					//{
-						//break;
-					//} // TODO delete try-catch
+					}
+					catch (const TimeoutException&)
+					{
+						break;
+					} // TODO delete try-catch
 
 					const auto P1 = surf1.evaluate(sol.x, sol.y), P2 = surf2.evaluate(sol.z, sol.w);
 					F = Vector4::extend(P1 - P2, dot(P1 - P, tangent) - step);
@@ -194,7 +195,7 @@ namespace ManualCAD
 				} while (F.length() >= EPS);
 				//while ((sol - prev_sol).length() >= EPS);
 
-				if (!surf1.get_u_range().contains(sol.x))
+				if (!surf1.get_u_range().contains(sol.x)) // TODO to s¹ zawiniêcia jak na linii zmiany daty Ziemi, dorobiæ zawiniêcia jak na biegunach
 				{
 					if (surf1.u_wraps_at_v(sol.y))
 						sol.x = surf1.get_u_range().wrap(sol.x);
@@ -644,6 +645,17 @@ namespace ManualCAD
 		auto bounds1 = surf1.get_patch_bounds(),
 			bounds2 = surf2.get_patch_bounds();
 
+		//auto box1 = surf1.get_bounding_box(),
+		//	box2 = surf2.get_bounding_box();
+		//size_t max_samples = std::max(sample_count_x, sample_count_y);
+		//const float x1 = box1.x_max - box1.x_min,
+		//	y1 = box1.y_max - box1.y_min,
+		//	x2 = box2.x_max - box2.x_min,
+		//	y2 = box2.y_max - box2.y_min;
+		//const float min_d = (1.0f / max_samples) * sqrtf(x1 * x1 + y1 * y1 + x2 * x2 + y2 * y2);
+
+		std::list<ParametricSurfaceIntersection> intersections;
+
 		std::list<std::pair<RangedBox<float>, RangedBox<float>>> intersecting_boxes;
 		for (const auto& rb1 : bounds1)
 		{
@@ -655,18 +667,8 @@ namespace ManualCAD
 			}
 		}
 
-		Vector2 uv1min, uv2min;
 		/*auto urange1 = surf1.get_u_range(), vrange1 = surf1.get_v_range(),
 			urange2 = surf2.get_u_range(), vrange2 = surf2.get_v_range();*/
-		auto box1 = surf1.get_bounding_box(),
-			box2 = surf2.get_bounding_box();
-		size_t max_samples = std::max(sample_count_x, sample_count_y);
-		const float x1 = box1.x_max - box1.x_min,
-			y1 = box1.y_max - box1.y_min,
-			x2 = box2.x_max - box2.x_min,
-			y2 = box2.y_max - box2.y_min;
-		const float min_d = (1.0f / max_samples) * sqrtf(x1 * x1 + y1 * y1 + x2 * x2 + y2 * y2);
-
 		for (const auto& p : intersecting_boxes)
 		{
 			auto urange1 = p.first.us, vrange1 = p.first.vs,
@@ -677,28 +679,43 @@ namespace ManualCAD
 				std::uniform_real_distribution<float> random_v1(vrange1.from, vrange1.to);
 				std::uniform_real_distribution<float> random_u2(urange2.from, urange2.to);
 				std::uniform_real_distribution<float> random_v2(vrange2.from, vrange2.to);
-				for (int i = 0; i <= sample_count_x * sample_count_y / intersecting_boxes.size(); ++i)
+				const int samples = sample_count_x * sample_count_y / intersecting_boxes.size();
+
+				auto prod_box = Box::intersect(p.first.box, p.second.box);
+				const float x1 = prod_box.x_max - prod_box.x_min,
+					y1 = prod_box.y_max - prod_box.y_min;
+				const float min_d = (1.0f / (samples + 1)) * sqrtf(x1 * x1 + y1 * y1);
+
+				for (int i = 0; i <= samples; ++i)
 				{
 					const float u1 = random_u1(dev),
 						v1 = random_v1(dev),
 						u2 = random_u2(dev),
 						v2 = random_v2(dev);
+
 					const float d = (surf1.evaluate(u1, v1) - surf2.evaluate(u2, v2)).length();
-					try
+					if (d < min_d)
 					{
-						const Vector2 uv1 = { u1,v1 }, uv2 = { u2,v2 };
-						auto start = find_first_common_point(surf1, surf2, uv1, uv2);
-						return intersect_surfaces(surf1, surf2, step, max_steps, start.first, start.second, force_loop);
-					}
-					catch (const CommonIntersectionPointNotFoundException&)
-					{
-						// nothing
+						try
+						{
+							const Vector2 uv1 = { u1,v1 }, uv2 = { u2,v2 };
+							auto start = find_first_common_point(surf1, surf2, uv1, uv2);
+							return intersect_surfaces(surf1, surf2, step, max_steps, start.first, start.second, force_loop);
+						}
+						catch (const std::exception&)
+						{
+							// nothing
+						}
 					}
 				}
 			}
 			else
 			{
-				float dmin = INFINITY;
+				auto prod_box = Box::intersect(p.first.box, p.second.box);
+				const float x1 = prod_box.x_max - prod_box.x_min,
+					y1 = prod_box.y_max - prod_box.y_min;
+				const float min_d = (1.0f / (sample_count_x * sample_count_y + 1)) * sqrtf(x1 * x1 + y1 * y1);
+
 				for (int i1 = 1; i1 <= sample_count_x; ++i1)
 					for (int j1 = 1; j1 <= sample_count_y; ++j1)
 						for (int i2 = 1; i2 <= sample_count_x; ++i2)
@@ -709,15 +726,99 @@ namespace ManualCAD
 									u2 = urange2.from + i2 * (urange2.to - urange2.from) / (sample_count_x + 1),
 									v2 = vrange2.from + j2 * (vrange2.to - vrange2.from) / (sample_count_y + 1); // from 0 and (sample_count - 1) - search includes borders, from 1 and (sample_count + 1) - do not include borders
 								const float d = (surf1.evaluate(u1, v1) - surf2.evaluate(u2, v2)).length();
-								if (d < dmin)
+								if (d < min_d)
 								{
-									dmin = d;
-									uv1min = { u1,v1 };
-									uv2min = { u2,v2 };
+									try
+									{
+										const Vector2 uv1 = { u1,v1 }, uv2 = { u2,v2 };
+										auto start = find_first_common_point(surf1, surf2, uv1, uv2);
+										return intersect_surfaces(surf1, surf2, step, max_steps, start.first, start.second, force_loop);
+									}
+									catch (const std::exception&)
+									{
+										// nothing
+									}
 								}
 							}
 			}
 		}
+		//auto bounds1 = surf1.get_patch_bounds(),
+		//	bounds2 = surf2.get_patch_bounds();
+
+		//std::list<std::pair<RangedBox<float>, RangedBox<float>>> intersecting_boxes;
+		//for (const auto& rb1 : bounds1)
+		//{
+		//	for (const auto& rb2 : bounds2)
+		//	{
+		//		auto prod_box = Box::intersect(rb1.box, rb2.box);
+		//		if (!prod_box.is_empty())
+		//			intersecting_boxes.push_back({ rb1, rb2 });
+		//	}
+		//}
+
+		//Vector2 uv1min, uv2min;
+		///*auto urange1 = surf1.get_u_range(), vrange1 = surf1.get_v_range(),
+		//	urange2 = surf2.get_u_range(), vrange2 = surf2.get_v_range();*/
+		//auto box1 = surf1.get_bounding_box(),
+		//	box2 = surf2.get_bounding_box();
+		//size_t max_samples = std::max(sample_count_x, sample_count_y);
+		//const float x1 = box1.x_max - box1.x_min,
+		//	y1 = box1.y_max - box1.y_min,
+		//	x2 = box2.x_max - box2.x_min,
+		//	y2 = box2.y_max - box2.y_min;
+		//const float min_d = (1.0f / max_samples) * sqrtf(x1 * x1 + y1 * y1 + x2 * x2 + y2 * y2);
+
+		//for (const auto& p : intersecting_boxes)
+		//{
+		//	auto urange1 = p.first.us, vrange1 = p.first.vs,
+		//		urange2 = p.second.us, vrange2 = p.second.vs;
+		//	if constexpr (NO_HINT_RANDOM_SAMPLE)
+		//	{
+		//		std::uniform_real_distribution<float> random_u1(urange1.from, urange1.to);
+		//		std::uniform_real_distribution<float> random_v1(vrange1.from, vrange1.to);
+		//		std::uniform_real_distribution<float> random_u2(urange2.from, urange2.to);
+		//		std::uniform_real_distribution<float> random_v2(vrange2.from, vrange2.to);
+		//		for (int i = 0; i <= sample_count_x * sample_count_y / intersecting_boxes.size(); ++i)
+		//		{
+		//			const float u1 = random_u1(dev),
+		//				v1 = random_v1(dev),
+		//				u2 = random_u2(dev),
+		//				v2 = random_v2(dev);
+		//			const float d = (surf1.evaluate(u1, v1) - surf2.evaluate(u2, v2)).length();
+		//			try
+		//			{
+		//				const Vector2 uv1 = { u1,v1 }, uv2 = { u2,v2 };
+		//				auto start = find_first_common_point(surf1, surf2, uv1, uv2);
+		//				return intersect_surfaces(surf1, surf2, step, max_steps, start.first, start.second, force_loop);
+		//			}
+		//			catch (const CommonIntersectionPointNotFoundException&)
+		//			{
+		//				// nothing
+		//			}
+		//		}
+		//	}
+		//	else
+		//	{
+		//		float dmin = INFINITY;
+		//		for (int i1 = 1; i1 <= sample_count_x; ++i1)
+		//			for (int j1 = 1; j1 <= sample_count_y; ++j1)
+		//				for (int i2 = 1; i2 <= sample_count_x; ++i2)
+		//					for (int j2 = 1; j2 <= sample_count_y; ++j2)
+		//					{
+		//						const float u1 = urange1.from + i1 * (urange1.to - urange1.from) / (sample_count_x + 1),
+		//							v1 = vrange1.from + j1 * (vrange1.to - vrange1.from) / (sample_count_y + 1),
+		//							u2 = urange2.from + i2 * (urange2.to - urange2.from) / (sample_count_x + 1),
+		//							v2 = vrange2.from + j2 * (vrange2.to - vrange2.from) / (sample_count_y + 1); // from 0 and (sample_count - 1) - search includes borders, from 1 and (sample_count + 1) - do not include borders
+		//						const float d = (surf1.evaluate(u1, v1) - surf2.evaluate(u2, v2)).length();
+		//						if (d < dmin)
+		//						{
+		//							dmin = d;
+		//							uv1min = { u1,v1 };
+		//							uv2min = { u2,v2 };
+		//						}
+		//					}
+		//	}
+		//}
 
 		throw CommonIntersectionPointNotFoundException();
 		//auto start = find_first_common_point(surf1, surf2, uv1min, uv2min);

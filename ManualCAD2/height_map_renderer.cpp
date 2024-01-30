@@ -2,7 +2,7 @@
 
 namespace ManualCAD
 {
-	HeightMapRenderer::HeightMapRenderer(const std::list<const ParametricSurfaceObject*>& surfaces, const Box& box) : surfaces(surfaces), fbo(), texture()
+	HeightMapRenderer::HeightMapRenderer(const std::list<const ParametricSurfaceObject*>& surfaces, const Box& box, float offset) : surfaces(surfaces), fbo(), texture(), offset(offset)
 	{
 		fbo.init();
 		fbo.bind();
@@ -13,7 +13,7 @@ namespace ManualCAD
 		fbo.unbind();
 
 		renderer.default_shader_set = ShaderSet::Type::HeightMap;
-		renderer.get_camera().rotate(0.25f * PI, 0.25 * PI, 0.0f);
+		renderer.get_camera().set_rotation(HALF_PI, HALF_PI, 0.0f);
 		// we set scale such that we transform box to [-1,1]x[0,1]x[-1,1] (order of axes after rotation: X, Z, -Y)
 		renderer.get_camera().zoom(1.0f / (box.x_max - box.x_min), 1.0f / (box.z_max - box.z_min), 1.0f / (box.y_max - box.y_min));//scale * (height - bottom_height));
 		Vector3 box_bottom_center = box.center();//{ center.x, center.y + scale * bottom_height, center.z };
@@ -44,6 +44,7 @@ namespace ManualCAD
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clearing is not necessary since we clear while creating texture or removing a line
 
 		renderer.set_additional_uniform_variable("is_idx_map", 0.0f);
+		renderer.set_additional_uniform_variable("au_offset", offset);
 		for (const auto* surf : surfaces)
 			surf->get_const_renderable().render(renderer, TEX_DIM, TEX_DIM);
 
@@ -70,6 +71,36 @@ namespace ManualCAD
 		int i = 1;
 		renderer.set_additional_uniform_variable("is_idx_map", 1.0f);
 		renderer.set_additional_uniform_variable("au_surf_count", surfaces.size());
+		renderer.set_additional_uniform_variable("au_offset", offset);
+		for (const auto* surf : surfaces)
+		{
+			renderer.set_additional_uniform_variable("au_surf_idx", i);
+			surf->get_const_renderable().render(renderer, TEX_DIM, TEX_DIM);
+			++i;
+		}
+
+		// render again with partial and zero offset to fill gaps in C0 fragments
+		// TODO: there IS a better way to do it! (maybe exploit some empty patches in shaders)
+		i = 1;
+		renderer.set_additional_uniform_variable("au_offset", 0.8f * offset);
+		for (const auto* surf : surfaces)
+		{
+			renderer.set_additional_uniform_variable("au_surf_idx", i);
+			surf->get_const_renderable().render(renderer, TEX_DIM, TEX_DIM);
+			++i;
+		}
+
+		i = 1;
+		renderer.set_additional_uniform_variable("au_offset", 0.35f * offset);
+		for (const auto* surf : surfaces)
+		{
+			renderer.set_additional_uniform_variable("au_surf_idx", i);
+			surf->get_const_renderable().render(renderer, TEX_DIM, TEX_DIM);
+			++i;
+		}
+
+		i = 1;
+		renderer.set_additional_uniform_variable("au_offset", 0.0f);
 		for (const auto* surf : surfaces)
 		{
 			renderer.set_additional_uniform_variable("au_surf_idx", i);

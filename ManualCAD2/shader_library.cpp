@@ -27,14 +27,14 @@ namespace ManualCAD
 	ShaderSet get_height_map_set()
 	{
 		ShaderSet set{};
-		set.line_shader.init("line_vertex_shader.glsl", "line_fragment_shader.glsl");
+		set.line_shader.init("line_vertex_shader.glsl", "line_fragment_shader.glsl"); // TODO add offset to torus and make tessellation on it (or change layout to triangles)
 		set.trim_line_shader.init("line_tex_vertex_shader.glsl", "line_trim_fragment_shader.glsl");
 		set.point_shader.init("line_vertex_shader.glsl", "point_fragment_shader.glsl");
 		set.cursor_shader.init("cursor_vertex_shader.glsl", "cursor_fragment_shader.glsl");
 		set.bezier_shader.init("line_vertex_shader.glsl", "bezier_curve_geometry_shader.glsl", "line_fragment_shader.glsl");
-		set.bezier_patch_shader.init("dummy_vertex_shader.glsl", "patch_tess_control_shader.glsl", "bezier_patch_tess_eval_shader.glsl", "height_map_fragment_shader.glsl");
-		set.de_boor_patch_shader.init("dummy_vertex_shader.glsl", "patch_tess_control_shader.glsl", "de_boor_patch_tess_eval_shader.glsl", "height_map_fragment_shader.glsl");
-		set.rational_20_param_patch_shader.init("dummy_vertex_shader.glsl", "rational_20_param_patch_tess_control_shader.glsl", "rational_20_param_patch_tess_eval_shader.glsl", "height_map_fragment_shader.glsl");
+		set.bezier_patch_shader.init("dummy_vertex_shader.glsl", "patch_tess_control_shader.glsl", "bezier_patch_offset_tess_eval_shader.glsl", "height_map_fragment_shader.glsl");
+		set.de_boor_patch_shader.init("dummy_vertex_shader.glsl", "patch_tess_control_shader.glsl", "de_boor_patch_offset_tess_eval_shader.glsl", "height_map_fragment_shader.glsl");
+		set.rational_20_param_patch_shader.init("dummy_vertex_shader.glsl", "rational_20_param_patch_tess_control_shader.glsl", "rational_20_param_patch_tess_eval_shader.glsl", "height_map_fragment_shader.glsl"); // TODO add offset and make ParametricSurfaceWithSecondDerivative
 		set.simple_shader.init("simple_rect_vertex_shader.glsl", "line_fragment_shader.glsl");
 		set.two_dim_shader.init("2d_vertex_shader.glsl", "wrap_around_parameters_geometry_shader.glsl", "line_fragment_shader.glsl");
 		//set.workpiece_shader.init("workpiece_vertex_shader.glsl", "phong_fragment_shader.glsl");

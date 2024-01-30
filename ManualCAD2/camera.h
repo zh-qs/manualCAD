@@ -43,6 +43,7 @@ namespace ManualCAD
 		void zoom(float x, float y, float z);
 		void zoom(float factor) { zoom(factor, factor, factor); }
 		void rotate(float ang_x_rad, float ang_y_rad, float ang_z_rad);
+		void set_rotation(float ang_x_rad, float ang_y_rad, float ang_z_rad);
 		Vector3 get_scale() const { return scale; }
 		Vector3 get_rotation_deg() const;
 		void reset_scale() { scale = { 1.0f,1.0f,1.0f }; }

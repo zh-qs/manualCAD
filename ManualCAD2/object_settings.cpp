@@ -565,6 +565,11 @@ namespace ManualCAD
 		static int cutter_current;
 		ImGui::Combo("Cutter type", &cutter_current, cutters, IM_ARRAYSIZE(cutters));
 
+		if (static_cast<Prototype::ProgramType>(item_current) == Prototype::ProgramType::Signature)
+		{
+			build_objects_list<ParametricCurveObject, std::list>("Signature curves", prototype, prototype.signature_curves);
+		}
+
 		if (ImGui::Button("Generate"))
 		{
 			std::unique_ptr<Cutter> cutter;
@@ -581,10 +586,7 @@ namespace ManualCAD
 			ImGui::SeparatorText("Milling program");
 			auto& program = prototype.generated_program.value();
 			ImGui::Text("Name: %s", program.get_name().c_str());
-			//ImGui::Checkbox("visible", &workpiece.path.visible);
 			ImGui::SeparatorText("Cutter");
-			//ImGui::SliderFloat("Speed", &program.cutter_speed, 1.0f, 100.0f, NULL, ImGuiSliderFlags_NoInput);
-			//ImGui::SliderFloat("Cutting part height", &program.cutter->cutting_part_height, 1.0f, 10.0f, NULL, ImGuiSliderFlags_NoInput);
 			ImGui::Text("Diameter: %.1f mm", program.cutter->get_diameter() * 10.0f);
 			ImGui::Text("Type: %s", program.cutter->get_type());
 			
@@ -602,7 +604,8 @@ namespace ManualCAD
 				if (!filename.empty())
 				{
 					int diameter_i = static_cast<int>(10.0f * program.cutter->get_diameter());
-					std::string extension = '.' + (program.cutter->get_type_char() + std::to_string(diameter_i));
+					std::string diameter_str = (diameter_i < 10 ? "0" : "") + std::to_string(diameter_i);
+					std::string extension = '.' + (program.cutter->get_type_char() + diameter_str);
 					if (filename.substr(filename.size() - 4, 4) != extension)
 						filename += extension;
 					try {
@@ -625,7 +628,7 @@ namespace ManualCAD
 			prototype.show_envelope_experimental();
 		}
 		static int tex_idx = -1;
-		if (ImGui::Button("Render index map"))
+		if (ImGui::Button("Render index map (memory unsafe!)"))
 		{
 			const Vector2 min = { prototype.view_boundary_points[0].x, prototype.view_boundary_points[0].z },
 				max = { prototype.view_boundary_points[2].x, prototype.view_boundary_points[2].z };
@@ -634,13 +637,13 @@ namespace ManualCAD
 			Box box = plane.get_bounding_box();
 			box.y_max += prototype.mill_height * prototype.scale;
 			Vector3 map_size = { box.x_max - box.x_min, box.y_max - box.y_min,box.z_max - box.z_min };
-			auto r = HeightMapRenderer{ prototype.surfaces, box };
+			auto r = HeightMapRenderer{ prototype.surfaces, box, prototype.scale * 0.5f * 0.8f }; // 0.8f : for K08 mill
 			r.render_index_map(map_size);
 			tex_idx = r.get_texture().get_id();
 		}
 		if (tex_idx > 0)
 		{
-			ImGui::Image((void*)(intptr_t)tex_idx, { 300, 300 });
+			ImGui::Image((void*)(intptr_t)tex_idx, { 2000, 2000 });
 		}
 	}
 }

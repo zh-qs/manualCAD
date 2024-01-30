@@ -177,6 +177,7 @@
     <ClCompile Include="algebra.cpp" />
     <ClCompile Include="axes_cursor.cpp" />
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="curve_path.cpp" />
     <ClCompile Include="curve_with_polyline.cpp" />
     <ClCompile Include="cutter.cpp" />
     <ClCompile Include="glApplication.cpp" />
@@ -220,14 +221,18 @@
   <ItemGroup>
     <ClInclude Include="application_settings.h" />
     <ClInclude Include="axes_cursor.h" />
+    <ClInclude Include="parametric_curve.h" />
+    <ClInclude Include="polynomial_algorithms.h" />
     <ClInclude Include="box.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="bilinear_form_raycastable.h" />
     <ClInclude Include="constant_parameter.h" />
     <ClInclude Include="cursor.h" />
+    <ClInclude Include="curve_path.h" />
     <ClInclude Include="cutter.h" />
     <ClInclude Include="cutter_move.h" />
     <ClInclude Include="ellipsoid.h" />
+    <ClInclude Include="square_map_algorithms.h" />
     <ClInclude Include="graph.h" />
     <ClInclude Include="height_map_renderer.h" />
     <ClInclude Include="height_map.h" />
@@ -248,6 +253,7 @@
     <ClInclude Include="task.h" />
     <ClInclude Include="triangle_mesh.h" />
     <ClInclude Include="thick_line_rasterizer.h" />
+    <ClInclude Include="uv_switched_surface.h" />
     <ClInclude Include="workpiece_renderable.h" />
     <ClInclude Include="line.h" />
     <ClInclude Include="linear_equation_system_4x4.h" />
@@ -398,6 +404,16 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="height_map_fragment_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="bezier_patch_offset_tess_eval_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="de_boor_patch_offset_tess_eval_shader.glsl">
       <FileType>Document</FileType>
     </CopyFileToFolders>
   </ItemGroup>

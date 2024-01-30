@@ -246,6 +246,13 @@ namespace ManualCAD
 		rotz += ang_z_rad;
 	}
 
+	void Camera::set_rotation(float ang_x_rad, float ang_y_rad, float ang_z_rad)
+	{
+		rotx = ang_x_rad;
+		roty = ang_y_rad;
+		rotz = ang_z_rad;
+	}
+
 	Vector3 Camera::get_rotation_deg() const
 	{
 		return (180.0f / PI) * Vector3 { rotx, roty, rotz };
