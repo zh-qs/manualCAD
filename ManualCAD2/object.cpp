@@ -15,6 +15,7 @@ namespace ManualCAD
 	int InterpolationSpline::counter = 0;
 	int BicubicC0BezierSurface::counter = 0;
 	int BicubicC2BezierSurface::counter = 0;
+	int BicubicC2NURBSSurface::counter = 0;
 	int Gregory20ParamSurface::counter = 0;
 	int IntersectionCurve::counter = 0;
 
@@ -53,12 +54,12 @@ namespace ManualCAD
 
 	void Object::update_renderable_matrix()
 	{
-		if (!illusory) renderable.set_model_matrix(transformation.get_matrix());
+		if (!illusory) renderable.apply_transformation(transformation);
 	}
 
 	void Object::update_renderable_matrix(const Transformation& combine_transformation, const Vector3& center)
 	{
-		if (!illusory) renderable.set_model_matrix(transformation.get_matrix_combined_with(combine_transformation, center));
+		if (!illusory) renderable.apply_transformations(transformation, combine_transformation, center);
 	}
 
 	void Object::build_settings(ObjectSettingsWindow& parent)
@@ -1604,6 +1605,546 @@ namespace ManualCAD
 	std::vector<ObjectHandle> BicubicC2BezierSurfacePreview::clone() const
 	{
 		return std::vector<ObjectHandle>(); // BicubicC2BezierSurfacePreview can't be cloned
+	}
+
+	void BicubicC2NURBSSurface::generate_renderable()
+	{
+		std::vector<Vector3> positions;
+		positions.reserve(points.size());
+
+		for (auto it = points.begin(); it != points.end(); ++it)
+		{
+			positions.push_back((*it)->get_const_position());
+		}
+
+		surf.set_data(positions, weights, patches_x, patches_y);
+		surf.color = color;
+		surf.contour_color = contour_color;
+		surf.draw_contour = contour_visible;
+		surf.draw_patch = patch_visible;
+	}
+
+	void BicubicC2NURBSSurface::build_specific_settings(ObjectSettingsWindow& parent)
+	{
+		ObjectSettings::build_bicubic_c2_nurbs_surface_settings(*this, parent);
+		ObjectSettings::build_parametric_surface_settings(*this, parent);
+	}
+
+	void BicubicC2NURBSSurface::decompose_uv(float u, float v, float& uu, float& vv, int& ui, int& vi) const
+	{
+		float uif, vif;
+		uu = modf(u, &uif);
+		vv = modf(v, &vif);
+
+		ui = static_cast<int>(uif);
+		vi = static_cast<int>(vif);
+
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		if (uif < 0)
+		{
+			uu -= uif;
+			ui = 0;
+		}
+		else if (uif >= patches_x)
+		{
+			uu += 1.0f + uif - patches_x;
+			ui = points_x - 4;
+		}
+
+		if (vif < 0)
+		{
+			vv -= vif;
+			vi = 0;
+		}
+		if (vif >= patches_y)
+		{
+			vv = 1.0f + vif - patches_y;
+			vi = points_y - 4;
+		}
+	}
+
+	void BicubicC2NURBSSurface::on_delete()
+	{
+		for (auto* p : points)
+			p->decrement_persistence();
+	}
+
+	BicubicC2NURBSSurface& BicubicC2NURBSSurface::create_and_add(ObjectController& controller, const Vector3& cursor_pos, int patches_x, int patches_y, float dist_between_points_x, float dist_between_points_y)
+	{
+		int points_x = patches_x + 3;
+		int points_y = patches_y + 3;
+
+		std::vector<ObjectHandle> points(points_x * points_y);
+		std::vector<Point*> point_ptrs(points.size());
+
+		for (int i = 0; i < points.size(); ++i)
+		{
+			int x = i % points_x, y = i / points_x;
+			points[i] = Object::create<Point>();
+			points[i]->transformation.position = { cursor_pos.x + dist_between_points_x * x, cursor_pos.y, cursor_pos.z + dist_between_points_y * y };
+			points[i]->update_renderable_matrix();
+
+			point_ptrs[i] = dynamic_cast<Point*>(points[i].get());
+		}
+
+		auto patch = Object::create<BicubicC2NURBSSurface>(point_ptrs, patches_x, patches_y, false);
+		patch->real_children = patch->children = points.size();
+
+		auto& patch_ref = *patch;
+
+		controller.add_object(std::move(patch));
+		for (auto& obj : points)
+			controller.add_object(std::move(obj));
+
+		return patch_ref;
+	}
+
+	BicubicC2NURBSSurface& BicubicC2NURBSSurface::create_cylinder_and_add(ObjectController& controller, const Vector3& cursor_pos, int patches_x, int patches_y, float radius, float dist_between_points_y)
+	{
+		int points_y = patches_y + 3;
+		int points_x = patches_x;
+
+		std::vector<ObjectHandle> points(points_x * points_y);
+		std::vector<Point*> point_ptrs((points_x + 3) * points_y);
+
+		for (int i = 0; i < points.size(); ++i)
+		{
+			points[i] = Object::create<Point>();
+		}
+		for (int i = 0; i < point_ptrs.size(); ++i)
+		{
+			int x = i % (points_x + 3), y = i / (points_x + 3);
+			if (x >= points_x)
+				x -= points_x;
+			point_ptrs[i] = dynamic_cast<Point*>(points[x + y * points_x].get());
+		}
+
+		const float angle_step = 2 * PI / points_x;
+		const float actual_radius = 3.0f * radius / (cosf(angle_step) + 2.0f);
+
+		for (int x = 0; x < points_x; ++x)
+		{
+			const float angle = angle_step * x;
+			const float sin = sinf(angle), cos = cosf(angle);
+
+			Vector3 on_circle = { actual_radius * cos, actual_radius * sin, 0.0f };
+
+			for (int y = 0; y < points_y; ++y)
+			{
+				const Vector3 base_point = Vector3{ cursor_pos.x,cursor_pos.y,cursor_pos.z + dist_between_points_y * y } + on_circle;
+				points[x + y * points_x]->transformation.position = base_point;
+			}
+		}
+
+		for (int i = 0; i < points.size(); ++i)
+		{
+			points[i]->update_renderable_matrix();
+		}
+
+		auto patch = Object::create<BicubicC2NURBSSurface>(point_ptrs, patches_x, patches_y, true);
+		patch->real_children = patch->children = points.size();
+
+		auto& patch_ref = *patch;
+
+		controller.add_object(std::move(patch));
+		for (auto& obj : points)
+			controller.add_object(std::move(obj));
+
+		return patch_ref;
+	}
+
+	void BicubicC2NURBSSurface::add_to_serializer(Serializer& serializer, int idx)
+	{
+		serializer.add_bicubic_nurbs_c2_surface(*this, idx);
+	}
+
+	Vector3 BicubicC2NURBSSurface::evaluate(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+		float w[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				const auto w0 = weights[(vi + i) * points_x + ui],
+					w1 = weights[(vi + i) * points_x + ui + 1],
+					w2 = weights[(vi + i) * points_x + ui + 2],
+					w3 = weights[(vi + i) * points_x + ui + 3];
+
+				p[i] = n3m2 * w0 * b0 + n3m1 * w1 * b1 + n30 * w2 * b2 + n31 * w3 * b3;
+				w[i] = n3m2 * w0 + n3m1 * w1 + n30 * w2 + n31 * w3;
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+
+			return (n3m2 * p[0] + n3m1 * p[1] + n30 * p[2] + n31 * p[3]) / (n3m2 * w[0] + n3m1 * w[1] + n30 * w[2] + n31 * w[3]);
+		}
+	}
+
+	Vector3 BicubicC2NURBSSurface::normal(float u, float v) const
+	{
+		return normalize(cross(du(u, v), dv(u, v)));
+	}
+
+	Vector3 BicubicC2NURBSSurface::du(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+		Vector3 dp[4];
+		float w[4];
+		float dw[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				const auto w0 = weights[(vi + i) * points_x + ui],
+					w1 = weights[(vi + i) * points_x + ui + 1],
+					w2 = weights[(vi + i) * points_x + ui + 2],
+					w3 = weights[(vi + i) * points_x + ui + 3];
+
+				p[i] = n3m2 * w0 * b0 + n3m1 * w1 * b1 + n30 * w2 * b2 + n31 * w3 * b3;
+				w[i] = n3m2 * w0 + n3m1 * w1 + n30 * w2 + n31 * w3;
+
+				// derivative
+				dp[i] = n2m1 * (w1 * b1 - w0 * b0) + n20 * (w2 * b2 - w1 * b1) + n21 * (w3 * b3 - w2 * b2);
+				dw[i] = n2m1 * (w1 - w0) + n20 * (w2 - w1) + n21 * (w3 - w2);
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+
+			const auto p_res = n3m2 * p[0] + n3m1 * p[1] + n30 * p[2] + n31 * p[3],
+				dp_res = n3m2 * dp[0] + n3m1 * dp[1] + n30 * dp[2] + n31 * dp[3];
+			const float w_res = n3m2 * w[0] + n3m1 * w[1] + n30 * w[2] + n31 * w[3],
+				dw_res = n3m2 * dw[0] + n3m1 * dw[1] + n30 * dw[2] + n31 * dw[3];
+
+			return dp_res / w_res - (dw_res / (w_res * w_res)) * p_res;
+		}
+	}
+
+	Vector3 BicubicC2NURBSSurface::dv(float u, float v) const
+	{
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+		float w[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				const auto w0 = weights[(vi + i) * points_x + ui],
+					w1 = weights[(vi + i) * points_x + ui + 1],
+					w2 = weights[(vi + i) * points_x + ui + 2],
+					w3 = weights[(vi + i) * points_x + ui + 3];
+
+				p[i] = n3m2 * w0 * b0 + n3m1 * w1 * b1 + n30 * w2 * b2 + n31 * w3 * b3;
+				w[i] = n3m2 * w0 + n3m1 * w1 + n30 * w2 + n31 * w3;
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+			
+			// derivative
+			const auto p_res = n3m2 * p[0] + n3m1 * p[1] + n30 * p[2] + n31 * p[3],
+				dp_res = n2m1 * (w[1] * p[1] - w[0] * p[0]) + n20 * (w[2] * p[2] - w[1] * p[1]) + n21 * (w[3] * p[3] - w[2] * p[2]);
+			const float w_res = n3m2 * w[0] + n3m1 * w[1] + n30 * w[2] + n31 * w[3],
+				dw_res = n2m1 * (w[1] - w[0]) + n20 * (w[2] - w[1]) + n21 * (w[3] - w[2]);
+
+			return dp_res / w_res - (dw_res / (w_res * w_res)) * p_res;
+		}
+	}
+
+	Vector3 BicubicC2NURBSSurface::duu(float u, float v) const
+	{
+		// TODO
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			//const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			//const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				// second derivative
+				p[i] = n10 * (b2 - 2.0f * b1 + b0) + n11 * (b3 - 2.0f * b2 + b1);
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+
+			return n3m2 * p[0] + n3m1 * p[1] + n30 * p[2] + n31 * p[3];
+		}
+	}
+
+	Vector3 BicubicC2NURBSSurface::duv(float u, float v) const
+	{
+		// TODO
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			//const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				// derivative
+				p[i] = n2m1 * (b1 - b0) + n20 * (b2 - b1) + n21 * (b3 - b2);
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			//const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+
+			// derivative
+			return n2m1 * (p[1] - p[0]) + n20 * (p[2] - p[1]) + n21 * (p[3] - p[2]);
+		}
+	}
+
+	Vector3 BicubicC2NURBSSurface::dvv(float u, float v) const
+	{
+		// TODO
+		float uu, vv;
+		int ui, vi;
+		decompose_uv(u, v, uu, vv, ui, vi);
+		int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+
+		Vector3 p[4];
+
+		{
+			// de Boor basis for uu
+			const float n01 = 1;
+			const float n10 = n01 * (1 - uu), n11 = n01 * uu;
+			const float n2m1 = n10 * (1 - uu) / 2.0f, n20 = n10 * (uu + 1) / 2.0f + n11 * (2 - uu) / 2.0f, n21 = n11 * uu / 2.0f;
+			const float n3m2 = n2m1 * (1 - uu) / 3.0f, n3m1 = n2m1 * (uu + 2) / 3.0f + n20 * (2 - uu) / 3.0f, n30 = n20 * (uu + 1) / 3.0f + n21 * (3 - uu) / 3.0f, n31 = n21 * uu / 3.0f;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				auto b0 = points[(vi + i) * points_x + ui]->transformation.position,
+					b1 = points[(vi + i) * points_x + ui + 1]->transformation.position,
+					b2 = points[(vi + i) * points_x + ui + 2]->transformation.position,
+					b3 = points[(vi + i) * points_x + ui + 3]->transformation.position;
+
+				p[i] = n3m2 * b0 + n3m1 * b1 + n30 * b2 + n31 * b3;
+			}
+		}
+
+		{
+			// de Boor basis for vv
+			const float n01 = 1;
+			const float n10 = n01 * (1 - vv), n11 = n01 * vv;
+			//const float n2m1 = n10 * (1 - vv) / 2.0f, n20 = n10 * (vv + 1) / 2.0f + n11 * (2 - vv) / 2.0f, n21 = n11 * vv / 2.0f;
+			//const float n3m2 = n2m1 * (1 - vv) / 3.0f, n3m1 = n2m1 * (vv + 2) / 3.0f + n20 * (2 - vv) / 3.0f, n30 = n20 * (vv + 1) / 3.0f + n21 * (3 - vv) / 3.0f, n31 = n21 * vv / 3.0f;
+
+			// second derivative
+			return n10 * (p[2] - 2.0f * p[1] + p[0]) + n11 * (p[3] - 2.0f * p[2] + p[1]);
+		}
+	}
+
+	std::vector<RangedBox<float>> BicubicC2NURBSSurface::get_patch_bounds() const
+	{
+		const int points_x = patches_x + 3,
+			points_y = patches_y + 3;
+		std::vector<RangedBox<float>> result;
+		result.reserve(patches_x * patches_y);
+		for (int i = 0; i < patches_x; ++i)
+		{
+			for (int j = 0; j < patches_y; ++j)
+			{
+				Box box = Box::degenerate();
+				for (int k = 0; k < 4; ++k)
+				{
+					for (int l = 0; l < 4; ++l)
+					{
+						box.add(points[(i + k) + (j + l) * points_x]->transformation.position);
+					}
+				}
+				Range<float> us = { i,i + 1 },
+					vs = { j,j + 1 };
+				result.push_back({ box, us,vs });
+			}
+		}
+		return result;
+	}
+
+	std::vector<ObjectHandle> BicubicC2NURBSSurface::clone() const
+	{
+		std::vector<ObjectHandle> result;
+		std::map<Object*, Object*> old_to_new;
+		std::vector<Point*> new_points;
+		result.reserve(points.size() + 1);
+		for (Point* point : points)
+		{
+			auto it = old_to_new.find(point);
+			if (it == old_to_new.end()) // not found
+			{
+				result.push_back(std::move(point->clone()[0]));
+				old_to_new[point] = result.back().get();
+			}
+			new_points.push_back(dynamic_cast<Point*>(old_to_new[point]));
+		}
+		auto handle = Object::create<BicubicC2NURBSSurface>(new_points, weights, patches_x, patches_y, cylinder);
+		copy_basic_attributes_to(*handle);
+		handle->contour_color = contour_color;
+		handle->contour_visible = contour_visible;
+		handle->patch_visible = patch_visible;
+		result.push_back(std::move(handle));
+		return result;
+	}
+
+	void BicubicC2NURBSSurfacePreview::generate_renderable()
+	{
+		int points_x = patches_x + 3;
+		int points_y = patches_y + 3;
+
+		std::vector<Vector3> points(points_x * points_y);
+		std::vector<float> weights(points_x * points_y, 1.0f);
+
+		if (cylinder)
+		{
+			const float dist_between_points_y = width_y / patches_y;
+			const float angle_step = 2 * PI / patches_x;
+			const float actual_radius = 3.0f * radius / (cosf(angle_step) + 2.0f);
+			for (int x = 0; x < points_x; ++x)
+			{
+				const float angle = angle_step * x;
+				const float sin = sinf(angle), cos = cosf(angle);
+
+				const Vector3 on_circle = { actual_radius * cos, actual_radius * sin, 0.0f };
+
+				for (int y = 0; y < points_y; ++y)
+				{
+					points[x + y * points_x] = Vector3{ position.x,position.y,position.z + dist_between_points_y * y } + on_circle;
+				}
+			}
+		}
+		else
+		{
+			const float dist_between_points_x = width_x / patches_x;
+			const float dist_between_points_y = width_y / patches_y;
+
+			for (int i = 0; i < points.size(); ++i)
+			{
+				const int x = i % points_x, y = i / points_x;
+				points[i] = { position.x + dist_between_points_x * x, position.y, position.z + dist_between_points_y * y };
+			}
+		}
+
+		surf.reset_ebos();
+		surf.set_data(points, weights, patches_x, patches_y);
+	}
+
+	void BicubicC2NURBSSurfacePreview::build_specific_settings(ObjectSettingsWindow& parent)
+	{
+		ObjectSettings::build_bicubic_c2_nurbs_surface_preview_settings(*this, parent);
+	}
+
+	std::vector<ObjectHandle> BicubicC2NURBSSurfacePreview::clone() const
+	{
+		return std::vector<ObjectHandle>(); // BicubicC2NURBSSurfacePreview can't be cloned
 	}
 
 	void Gregory20ParamSurface::generate_renderable()

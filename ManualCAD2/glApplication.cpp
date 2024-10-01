@@ -128,7 +128,7 @@ namespace ManualCAD
 			// zoom using mouse wheel
 			if (!io.WantCaptureMouse && io.MouseWheel != 0.0f) {
 				renderer.get_camera().zoom(powf(ApplicationSettings::ZOOM_FACTOR, io.MouseWheel));
-				//raycaster.reset_downsampling();
+				controller.on_camera_move();
 			}
 
 			// Build windows from list
@@ -157,14 +157,14 @@ namespace ManualCAD
 				// move scene
 				if (ImGui::IsMouseDragging(ApplicationSettings::MOVE_BUTTON)) {
 					renderer.get_camera().move_by({ -io.MouseDelta.x / display_w * ApplicationSettings::MOVE_SPEED, io.MouseDelta.y / display_h * ApplicationSettings::MOVE_SPEED, 0 });
-					//if (io.MouseDelta.x > 0 || io.MouseDelta.y > 0)
-					//	raycaster.reset_downsampling();
+					if (io.MouseDelta.x > 0 || io.MouseDelta.y > 0)
+						controller.on_camera_move();
 				}
 				// rotate scene
 				if (ImGui::IsMouseDown(ApplicationSettings::ROTATE_BUTTON)) {
 					renderer.get_camera().rotate(io.MouseDelta.y * ApplicationSettings::ROTATE_SPEED, -io.MouseDelta.x * ApplicationSettings::ROTATE_SPEED, 0);
-					//if (io.MouseDelta.x > 0 || io.MouseDelta.y > 0)
-					//	raycaster.reset_downsampling();
+					if (io.MouseDelta.x > 0 || io.MouseDelta.y > 0)
+						controller.on_camera_move();
 				}
 				// set cursor
 				if (ImGui::IsMouseClicked(ApplicationSettings::SET_CURSOR_BUTTON) && ImGui::IsKeyDown(ApplicationSettings::SET_CURSOR_KEY)) {
@@ -219,6 +219,7 @@ namespace ManualCAD
 						}
 						else
 							selected_objects.set_screen_position_from_pixels(io.MousePos.x, io.MousePos.y, renderer.get_camera(), display_w, display_h);
+						controller.on_selection_move();
 					}
 					// select by drag (rectangle)
 					else {
@@ -265,7 +266,7 @@ namespace ManualCAD
 				}
 			}
 
-			renderer.disable_depth_buffer_write();
+			//renderer.disable_depth_buffer_write(); -> why rendering grid without depth test???
 
 			// render grid
 			renderer.add(*grid);

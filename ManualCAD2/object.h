@@ -34,7 +34,7 @@ namespace ManualCAD
 
 	class Object {
 		friend class ObjectSettings;
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		bool valid = false;
 	protected:
@@ -75,6 +75,7 @@ namespace ManualCAD
 
 		virtual void on_move(const Vector3& move) {}
 		virtual void on_delete() {}
+		virtual void on_camera_move() {}
 
 		void add_observer(Object& object) { observers.push_back(&object); }
 		void remove_observer(Object& object) { observers.remove(&object); }
@@ -295,7 +296,7 @@ namespace ManualCAD
 
 	class Torus : public ParametricSurfaceObject {
 		friend class ObjectSettings;
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		static int counter;
 
@@ -377,7 +378,7 @@ namespace ManualCAD
 
 	class Point : public Object {
 		friend class ObjectSettings;
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		static int counter;
 
@@ -409,7 +410,7 @@ namespace ManualCAD
 
 	class BezierC0Curve : public ParametricCurveObject {
 		friend class ObjectSettings;
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		static int counter;
 
@@ -498,7 +499,7 @@ namespace ManualCAD
 
 	class BezierC2Curve : public ParametricCurveObject, public Callbackable {
 		friend class ObjectSettings;
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		static int counter;
 
@@ -548,7 +549,7 @@ namespace ManualCAD
 
 	class InterpolationSpline : public ParametricCurveObject {
 		friend class ObjectSettings;
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		static int counter;
 
@@ -606,7 +607,7 @@ namespace ManualCAD
 
 	class BicubicC0BezierSurface : public ParametricSurfaceObject {
 		friend class ObjectSettings;
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		static int counter;
 
@@ -715,7 +716,7 @@ namespace ManualCAD
 
 	class BicubicC2BezierSurface : public ParametricSurfaceObject {
 		friend class ObjectSettings;
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		static int counter;
 
@@ -802,6 +803,117 @@ namespace ManualCAD
 		void build_specific_settings(ObjectSettingsWindow& parent) override;
 	public:
 		BicubicC2BezierSurfacePreview(const Vector3& cursor_pos) : surf(nullptr), Object(surf), position(cursor_pos) {
+			name = "This should not be displayed";
+			transformable = false;
+			illusory = true;
+			surf.color = { 1.0f,1.0f,1.0f,1.0f };
+			surf.draw_contour = false;
+			surf.draw_patch = true;
+		}
+
+		void bind_with(Object& object) override {}
+		void remove_binding_with(Object& object) override {}
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
+		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
+		void replace_child_by(Object& child, Object& other) override {}
+
+		std::vector<ObjectHandle> clone() const override;
+	};
+
+	class BicubicC2NURBSSurface : public ParametricSurfaceObject {
+		friend class ObjectSettings;
+		friend class JSONSerializer;
+
+		static int counter;
+
+		NURBSWithDeBoorContour surf;
+
+		std::vector<Point*> points;
+		std::vector<float> weights;
+		bool contour_visible = false;
+		bool patch_visible = true;
+		int patches_x, patches_y;
+		bool cylinder; // uWrapped
+
+		void generate_renderable() override;
+		void build_specific_settings(ObjectSettingsWindow& parent) override;
+
+		void decompose_uv(float u, float v, float& uu, float& vv, int& ui, int& vi) const;
+	public:
+		Vector4 contour_color = { 1.0f,1.0f,1.0f,1.0f };
+
+		BicubicC2NURBSSurface(const std::vector<Point*>& points, const std::vector<float> weigths, int patches_x, int patches_y, bool cylinder) : surf(&trim_texture.get_texture()), ParametricSurfaceObject(surf), points(points), weights(weigths), patches_x(patches_x), patches_y(patches_y), cylinder(cylinder) {
+			name = "NURBS C2 surface " + std::to_string(counter++);
+			transformable = false;
+			for (auto& p : points)
+			{
+				p->increment_persistence();
+				p->add_observer(*this);
+			}
+		}
+
+		BicubicC2NURBSSurface(const std::vector<Point*>& points, int patches_x, int patches_y, bool cylinder) : BicubicC2NURBSSurface(points, {}, patches_x, patches_y, cylinder) {
+			weights.assign(points.size(), 1.0f);
+		}
+
+		void bind_with(Object& object) override {}
+		void remove_binding_with(Object& object) override {}
+		float intersect_with_ray(const Ray& ray) override { return NAN; }
+		bool is_inside_screen_rectangle(const Rectangle& rect, const Matrix4x4& transformation) const override { return false; }
+		void on_delete() override;
+
+		static BicubicC2NURBSSurface& create_and_add(ObjectController& controller, const Vector3& cursor_pos, int patches_x, int patches_y, float dist_between_points_x, float dist_between_points_y);
+		static BicubicC2NURBSSurface& create_cylinder_and_add(ObjectController& controller, const Vector3& cursor_pos, int patches_x, int patches_y, float radius, float dist_between_points_y);
+
+		void add_to_serializer(Serializer& serializer, int idx) override;
+
+		void replace_child_by(Object& child, Object& other) override {
+			std::transform(points.begin(), points.end(), points.begin(), [&child, &other](Point* o) { return o == &child ? dynamic_cast<Point*>(&other) : o; });
+		}
+
+		Range<float> get_u_range() const override { return { 0, static_cast<float>(patches_x) }; }
+		Range<float> get_v_range() const override { return { 0, static_cast<float>(patches_y) }; }
+
+		Vector3 evaluate(float u, float v) const override;
+		Vector3 normal(float u, float v) const override;
+		Vector3 du(float u, float v) const override;
+		Vector3 dv(float u, float v) const override;
+		Vector3 duu(float u, float v) const override;
+		Vector3 duv(float u, float v) const override;
+		Vector3 dvv(float u, float v) const override;
+
+		Box get_bounding_box() const override {
+			Box box = Box::degenerate();
+			for (const auto* p : points)
+				box.add(p->transformation.position);
+			return box; // TODO maybe we can make smaller box?
+		}
+
+		std::vector<RangedBox<float>> get_patch_bounds() const override;
+
+		std::vector<ObjectHandle> clone() const override;
+	};
+
+	class BicubicC2NURBSSurfacePreview : public Object {
+		friend class ObjectSettings;
+
+		NURBSWithDeBoorContour surf;
+
+		Vector3 position;
+		int patches_x = 1;
+		int patches_y = 1;
+		/*float dist_between_points_x = 1.0f;
+		float dist_between_points_y = 1.0f;*/
+		float width_x = 1.0f;
+		float width_y = 1.0f;
+
+		bool cylinder = false;
+		float radius = 2.0f;
+
+		void generate_renderable() override;
+		void build_specific_settings(ObjectSettingsWindow& parent) override;
+	public:
+		BicubicC2NURBSSurfacePreview(const Vector3& cursor_pos) : surf(nullptr), Object(surf), position(cursor_pos) {
 			name = "This should not be displayed";
 			transformable = false;
 			illusory = true;

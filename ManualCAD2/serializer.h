@@ -1,35 +1,26 @@
-#pragma once
-
-#include <Serializer.h>
-#include "object.h"
-#include "object_controller.h"
-#include <vector>
 #include <filesystem>
+#include <stdexcept>
+#include <string>
 
 namespace ManualCAD
 {
-	class Serializer
-	{
-		MG1::SceneSerializer serializer;
-		ObjectController& controller;
-		Camera& camera;
-		size_t object_count;
-
-		MG1::PointRef get_point_ref_to(const Point& point);
-
+	class Serializer {
 	public:
-		Serializer(ObjectController& controller, Camera& camera);
+		virtual void serialize(const std::filesystem::path& filepath) = 0;
+		virtual void deserialize(const std::filesystem::path& filepath) = 0;
 
-		void serialize(const std::filesystem::path& filepath);
-		void deserialize(const std::filesystem::path& filepath);
-		
-		void add_point(const Point& point, int idx);
-		void add_torus(const Torus& torus, int idx);
-		void add_bezier_c0_curve(const BezierC0Curve& curve, int idx);
-		void add_bezier_c2_curve(const BezierC2Curve& curve, int idx);
-		void add_interpolation_spline(const InterpolationSpline& spline, int idx);
-		void add_bicubic_bezier_c0_surface(const BicubicC0BezierSurface& surf, int idx);
-		void add_bicubic_bezier_c2_surface(const BicubicC2BezierSurface& surf, int idx);
+		virtual void add_point(const Point& point, int idx) = 0;
+		virtual void add_torus(const Torus& torus, int idx) = 0;
+		virtual void add_bezier_c0_curve(const BezierC0Curve& curve, int idx) = 0;
+		virtual void add_bezier_c2_curve(const BezierC2Curve& curve, int idx) = 0;
+		virtual void add_interpolation_spline(const InterpolationSpline& spline, int idx) = 0;
+		virtual void add_bicubic_bezier_c0_surface(const BicubicC0BezierSurface& surf, int idx) = 0;
+		virtual void add_bicubic_bezier_c2_surface(const BicubicC2BezierSurface& surf, int idx) = 0;
+		virtual void add_bicubic_nurbs_c2_surface(const BicubicC2NURBSSurface& surf, int idx) = 0;
+	};
+
+	class SerializerException : public std::runtime_error {
+	public:
+		SerializerException(const std::string& message) : std::runtime_error(message) {}
 	};
 }
-

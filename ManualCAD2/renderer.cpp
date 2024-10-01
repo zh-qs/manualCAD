@@ -76,6 +76,15 @@ namespace ManualCAD
 		uq_lcolor_location = quad_shader.get_uniform_location("u_lcolor");
 		uq_saturation_location = quad_shader.get_uniform_location("u_saturation");
 
+		raycast_fbo.init();
+		raycast_fbo.bind();
+		raycast_texture.init();
+		raycast_texture.bind();
+		raycast_texture.configure();
+		raycast_fbo.unbind();
+
+		raycast_quad_shader.init("raycasting_vertex_shader.glsl", "quad_fragment_shader.glsl");
+
 		// replacement texture for non-trimmed surfaces
 		white_texture.init();
 		white_texture.bind();
@@ -90,7 +99,7 @@ namespace ManualCAD
 		glEnable(GL_DEPTH_TEST);
 
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		set_default_blending_function();
 	}
 
 	void Renderer::add(const Renderable& renderable, float thickness)
@@ -407,6 +416,58 @@ namespace ManualCAD
 		}
 	}
 
+	void Renderer::render_nurbs_and_de_boor_contour(const NURBSWithDeBoorContour& surf, const Vector4& color, int width, int height, float thickness)
+	{
+		const auto& lib = ShaderLibrary::get();
+		const auto& set = lib.get_shaders(default_shader_set);
+
+		auto m = camera.get_projection_matrix(width, height) * camera.get_view_matrix();// * surf.get_model_matrix(); -> patch is not transformable
+
+		if (surf.draw_contour)
+		{
+			set.line_shader.use();
+			glUniformMatrix4fv(lib.ul_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
+			glUniform4f(lib.ul_color_location, surf.contour_color.x, surf.contour_color.y, surf.contour_color.z, surf.contour_color.w);
+
+			use_additional_uniform_variables(set.line_shader);
+
+			surf.bind_contour_to_render();
+
+			glLineWidth(thickness);
+			glDrawElements(GL_LINES, surf.get_contour_indices_count(), GL_UNSIGNED_INT, NULL);
+
+			surf.unbind_from_render();
+		}
+		if (surf.draw_patch)
+		{
+			set.nurbs_patch_shader.use();
+			glActiveTexture(GL_TEXTURE0);
+			if (surf.has_texture())
+				surf.get_texture().bind();
+			else
+				white_texture.bind();
+			glUniform1i(lib.upb_trim_texture_location, 0);
+			glPatchParameteri(GL_PATCH_VERTICES, 16);
+			glUniformMatrix4fv(lib.upb_pvm_location, 1, GL_FALSE, GLColumnOrderMatrix4x4(m).elem);
+			glUniform4f(lib.upb_color_location, color.x, color.y, color.z, color.w);
+			glUniform1i(lib.upb_divisions_x_location, surf.divisions_x);
+			glUniform1i(lib.upb_divisions_y_location, surf.divisions_y);
+			glUniform1f(lib.upb_patches_x_location, surf.get_patches_x_count());
+			glUniform1f(lib.upb_patches_y_location, surf.get_patches_y_count());
+
+			use_additional_uniform_variables(set.de_boor_patch_shader);
+
+			surf.bind_patch_to_render();
+
+			glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
+			glLineWidth(thickness);
+			glDrawElements(GL_PATCHES, surf.get_patch_indices_count(), GL_UNSIGNED_INT, NULL);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			surf.unbind_from_render();
+		}
+	}
+
 	void Renderer::render_rational_20_param_surface(const Rational20ParamSurface& surf, const Vector4& color, int width, int height, float thickness)
 	{
 		const auto& lib = ShaderLibrary::get();
@@ -585,6 +646,66 @@ namespace ManualCAD
 		mesh.unbind_from_render();
 	}
 
+	void Renderer::render_bilinear_form_raycastable(const BilinearFormRaycastable& raycastable, const Vector4& color, int width, int height, float thickness)
+	{
+		const auto& lib = ShaderLibrary::get();
+		const auto& set = lib.get_shaders(default_shader_set);
+
+		int smallWidth = width / raycastable.get_current_downsampling_scale(), smallHeight = height / raycastable.get_current_downsampling_scale();
+
+		auto ellipsoid_form = raycastable.get_transformed_form();
+		auto inv_pv = camera.get_inverse_view_matrix()* camera.get_inverse_projection_matrix(width, height);
+		auto result_form = mul_with_first_transposed(inv_pv, ellipsoid_form) * inv_pv;
+		// bind framebuffer and set render viewport
+		raycast_fbo.bind();
+		raycast_texture.bind();
+		raycast_texture.set_size(smallWidth, smallHeight);
+		glViewport(0, 0, smallWidth, smallHeight);
+
+		// clear texture
+		glClearColor(0, 0, 0, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		// send uniform data
+		set.bilinear_form_raycast_shader.use();
+		glUniform4f(lib.ubfr_color_location, raycastable.color.x, raycastable.color.y, raycastable.color.z, raycastable.color.w);
+		glUniformMatrix4fv(lib.ubfr_form_location, 1, GL_FALSE, GLColumnOrderMatrix4x4{ result_form }.elem);
+		glUniform1f(lib.ubfr_specular_exponent_location, raycastable.specular_exponent);
+
+		// render texture
+		quad_vao.bind();
+		glBlendFunc(GL_ONE, GL_ZERO); // this is important to keep correct depth value in alpha component
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		set_default_blending_function(); // resetting to default blending function
+
+		// bind screen framebuffer
+		raycast_fbo.unbind();
+		glViewport(0, 0, width, height);
+
+		// use shader and send uniform data (texture sampler)
+		raycast_quad_shader.use();
+		glActiveTexture(GL_TEXTURE0);
+		raycast_texture.bind();
+		glUniform1i(uq_tex_location[0], 0);
+
+		// render screen
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// ******************************
+
+		//// bind our and screen framebuffers
+		//fbo.bind_to_read();
+		//texture.set_as_read();
+		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		////glFramebufferTexture(GL_DRAW_BUFFER, GL_COLOR_ATTACHMENT0, 0, 0);
+
+		//glBlitFramebuffer(0, 0, smallWidth, smallHeight, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		// divide downsampling scale if greater than 1
+		raycastable.update_current_downsampling();
+
+		quad_vao.unbind();
+	}
+
 	void Renderer::enable_depth_testing()
 	{
 		render_steps.push_back(std::make_unique<EnableDepthTestStep>());
@@ -603,6 +724,11 @@ namespace ManualCAD
 	void Renderer::disable_depth_buffer_write()
 	{
 		render_steps.push_back(std::make_unique<DisableDepthWriteStep>());
+	}
+
+	void Renderer::set_default_blending_function()
+	{
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	void Renderer::dispose()

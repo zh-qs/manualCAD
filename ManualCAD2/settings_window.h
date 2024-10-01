@@ -242,6 +242,9 @@ namespace ManualCAD
 				}
 
 				if (ImGui::BeginMenu("New")) {
+					if (ImGui::MenuItem("Ellipsoid")) {
+						controller.add_object(Object::create_at_cursor<Ellipsoid>(cursor));
+					}
 					if (ImGui::MenuItem("Torus")) {
 						controller.add_object(Object::create_at_cursor<Torus>(cursor));
 					}
@@ -266,6 +269,10 @@ namespace ManualCAD
 					}
 					if (ImGui::MenuItem("Bezier C2 surface")) {
 						controller.set_preview(Object::create<BicubicC2BezierSurfacePreview>(cursor.get_world_position()));
+						object_settings_window_visible = true;
+					}
+					if (ImGui::MenuItem("NURBS C2 surface")) {
+						controller.set_preview(Object::create<BicubicC2NURBSSurfacePreview>(cursor.get_world_position()));
 						object_settings_window_visible = true;
 					}
 					if (ImGui::MenuItem("Gregory fill-in")) {
@@ -462,6 +469,38 @@ namespace ManualCAD
 		const int& height;
 	public:
 		SceneSettingsWindow(Cursor& cursor, Renderer& renderer, ImVec4& clear_color, const int& width, const int& height) : cursor(cursor), renderer(renderer), clear_color(clear_color), width(width), height(height) {}
+
+		// test function
+		/*float calculate_z(float u, float v)
+		{
+			float screen_u = u;
+			float screen_v = v;
+
+			Matrix4x4 raw_form = Matrix4x4::identity();
+			Vector4 pixel{ screen_u, screen_v, 0, 1 };
+			raw_form.elem[3][3] = -1;
+
+			auto inv_pv = renderer.get_camera().get_inverse_view_matrix() * renderer.get_camera().get_inverse_projection_matrix(width, height);
+			auto form = mul_with_first_transposed(inv_pv, raw_form) * inv_pv;
+
+			float a = form.elem[2][2];
+			float b = dot(pixel, Vector4{ form.elem[0][2], form.elem[1][2], form.elem[2][2], form.elem[3][2] })
+				+ dot(Vector4{ form.elem[0][2], form.elem[1][2], form.elem[2][2], form.elem[3][2] },
+					pixel);
+			float c = dot(pixel, form * pixel);
+
+			float delta = b * b - 4 * a * c;
+
+			if (delta >= 0) {
+				float sqrtdelta = sqrt(delta);
+				float t = (-b - sqrtdelta) / (2 * a);
+				if (t < 0)
+					t += sqrtdelta / a;
+				if (t >= 0)
+					return t;
+			}
+			return -1.0f;
+		}*/
 
 		virtual void build() override {
 			Camera& camera = renderer.get_camera();

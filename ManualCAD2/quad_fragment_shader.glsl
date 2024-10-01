@@ -11,6 +11,7 @@ void main() {
 		discard;
 	}
 	else {
-		output_color = color;
+		output_color = vec4(color.xyz, 1.0f);
+		gl_FragDepth = color.w;
 	}
 }

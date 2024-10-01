@@ -19,7 +19,7 @@ namespace ManualCAD
 	class Serializer;
 
 	class ObjectController {
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		std::set<int> selected_indices;
 		std::set<int> selected_indices_snapshot;
@@ -200,5 +200,15 @@ namespace ManualCAD
 		void add_objects_to_serializer(Serializer& serializer) const;
 
 		void merge_points(Point& p1, Point& p2);
+
+		void on_camera_move() {
+			for (int i = 0; i < objects.size(); ++i)
+				objects[i]->on_camera_move();
+		}
+
+		void on_selection_move() {
+			for (int idx : selected_indices)
+				objects[idx]->on_camera_move();
+		}
 	};
 }

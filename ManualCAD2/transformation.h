@@ -19,12 +19,24 @@ namespace ManualCAD
 			return Matrix4x4::translation_transposed(-position) * Matrix4x4::rotation_axis_angle(rotation_vector, (PI / 180) * rotation_angle_deg) * Matrix4x4::scale(1 / scale.x, 1 / scale.y, 1 / scale.z);
 		}
 
+		Matrix4x4 get_inversed_matrix() const {
+			return Matrix4x4::scale(1 / scale.x, 1 / scale.y, 1 / scale.z) * Matrix4x4::rotation_axis_angle(rotation_vector, -(PI / 180) * rotation_angle_deg) * Matrix4x4::translation(-position);
+		}
+
 		Matrix4x4 get_matrix_combined_with(const Transformation& t, const Vector3& rotation_center) const {
 			return Matrix4x4::translation(rotation_center + t.position)
 				* Matrix4x4::rotation_axis_angle(t.rotation_vector, (PI / 180) * t.rotation_angle_deg)
 				* Matrix4x4::translation(-rotation_center + (Vector3{ 1.0f,1.0f,1.0f } - t.scale) * (rotation_center - position))
 				* get_matrix()
 				* Matrix4x4::scale(t.scale.x, t.scale.y, t.scale.z);
+		}
+
+		Matrix4x4 get_inversed_matrix_combined_with(const Transformation& t, const Vector3& rotation_center) const {
+			return Matrix4x4::scale(1 / t.scale.x, 1 / t.scale.y, 1 / t.scale.z)
+				* get_inversed_matrix()
+				* Matrix4x4::translation(rotation_center - (Vector3{ 1.0f,1.0f,1.0f } - t.scale) * (rotation_center - position))
+				* Matrix4x4::rotation_axis_angle(t.rotation_vector, -(PI / 180) * t.rotation_angle_deg)
+				* Matrix4x4::translation(-rotation_center - t.position);
 		}
 
 		void combine_with(const Transformation& t, const Vector3& rotation_center) {

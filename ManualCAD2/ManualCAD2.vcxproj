@@ -176,13 +176,17 @@
     <ClCompile Include="..\tinyfiledialogs\tinyfiledialogs.c" />
     <ClCompile Include="algebra.cpp" />
     <ClCompile Include="axes_cursor.cpp" />
+    <ClCompile Include="bilinear_form_object.cpp" />
+    <ClCompile Include="bilinear_form_raycastable.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="curve_path.cpp" />
     <ClCompile Include="curve_with_polyline.cpp" />
     <ClCompile Include="cutter.cpp" />
+    <ClCompile Include="ellipsoid.cpp" />
     <ClCompile Include="glApplication.cpp" />
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="height_map_renderer.cpp" />
+    <ClCompile Include="json_serializer.cpp" />
     <ClCompile Include="line.cpp" />
     <ClCompile Include="linear_equation_system_4x4.cpp" />
     <ClCompile Include="logger.cpp" />
@@ -198,7 +202,6 @@
     <ClCompile Include="rational_20_param_surface.cpp" />
     <ClCompile Include="renderable.cpp" />
     <ClCompile Include="rough_path.cpp" />
-    <ClCompile Include="serializer.cpp" />
     <ClCompile Include="settings_window.cpp" />
     <ClCompile Include="shader_library.cpp" />
     <ClCompile Include="simple_rect.cpp" />
@@ -221,11 +224,13 @@
   <ItemGroup>
     <ClInclude Include="application_settings.h" />
     <ClInclude Include="axes_cursor.h" />
+    <ClInclude Include="bilinear_form_raycastable.h" />
+    <ClInclude Include="json_serializer.h" />
     <ClInclude Include="parametric_curve.h" />
     <ClInclude Include="polynomial_algorithms.h" />
     <ClInclude Include="box.h" />
     <ClInclude Include="camera.h" />
-    <ClInclude Include="bilinear_form_raycastable.h" />
+    <ClInclude Include="bilinear_form_object.h" />
     <ClInclude Include="constant_parameter.h" />
     <ClInclude Include="cursor.h" />
     <ClInclude Include="curve_path.h" />
@@ -416,6 +421,18 @@
     <CopyFileToFolders Include="de_boor_patch_offset_tess_eval_shader.glsl">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="nurbs_patch_offset_tess_eval_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="nurbs_patch_tess_eval_shader.glsl">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="join_point_with_weight_vertex_shader.glsl" />
+    <None Include="patch_weight_tess_control_shader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

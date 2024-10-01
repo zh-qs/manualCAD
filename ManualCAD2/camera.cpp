@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <cmath>
 #include "application_settings.h"
+#include "logger.h"
 
 namespace ManualCAD
 {
@@ -53,9 +54,9 @@ namespace ManualCAD
 		{
 			Matrix4x4 result;
 			float inv_aspect = static_cast<float>(height) / width;
-			result.elem[0][0] = 2.0f * inv_aspect;
-			result.elem[1][1] = 2.0f;
-			result.elem[2][2] = 2.0f / (far - near);
+			result.elem[0][0] = inv_aspect;
+			result.elem[1][1] = 1.0f;
+			result.elem[2][2] = 1.0f / (far - near);
 			result.elem[2][3] = -(far + near) / (far - near);
 			result.elem[3][3] = 1.0f;
 			return result;
@@ -63,10 +64,10 @@ namespace ManualCAD
 
 		Matrix4x4 result;
 		float inv_aspect = static_cast<float>(height) / width;
-		result.elem[0][0] = 2.0f * inv_aspect;
-		result.elem[0][3] = eye_distance * 2.0f / focus_plane * 0.5f; // TODO is stereography in orthographic projection even sensible?
-		result.elem[1][1] = 2.0f;
-		result.elem[2][2] = 2.0f / (far - near);
+		result.elem[0][0] = inv_aspect;
+		result.elem[0][3] = eye_distance / focus_plane; // TODO is stereography in orthographic projection even sensible?
+		result.elem[1][1] = 1.0f;
+		result.elem[2][2] = 1.0f / (far - near);
 		result.elem[2][3] = -(far + near) / (far - near);
 		result.elem[3][3] = 1.0f;
 		return result * Matrix4x4::translation({ -eye_distance * 0.5f,0.0f,0.0f });
@@ -78,10 +79,10 @@ namespace ManualCAD
 		// TODO split inverse perspective for rendering (with eye_distance) and for UI interaction (w/o eye_distance)
 		Matrix4x4 result;
 		float aspect = static_cast<float>(width) / height;
-		result.elem[0][0] = 0.5f * aspect;
-		result.elem[1][1] = 0.5f;
-		result.elem[2][2] = 0.5f * (far - near);
-		result.elem[2][3] = 0.5f * (far + near);
+		result.elem[0][0] = aspect;
+		result.elem[1][1] = 1.0f;
+		result.elem[2][2] = (far - near);
+		result.elem[2][3] = (far + near);
 		result.elem[3][3] = 1.0f;
 		return result;
 	}
@@ -197,6 +198,8 @@ namespace ManualCAD
 		case ProjectionType::Ortographic:
 			return get_orthographic_projection_matrix(width, height);
 		}
+		Logger::log_error("Camera::get_projection_matrix: Invalid ProjectionType (this should never happen)!");
+		return Matrix4x4::identity();
 	}
 
 	Matrix4x4 Camera::get_inverse_projection_matrix(int width, int height) const
@@ -208,6 +211,8 @@ namespace ManualCAD
 		case ProjectionType::Ortographic:
 			return get_inverse_orthographic_projection_matrix(width, height);
 		}
+		Logger::log_error("Camera::get_inverse_projection_matrix: Invalid ProjectionType (this should never happen)!");
+		return Matrix4x4::identity();
 	}
 
 	void Camera::move_by(const Vector3& vec)
@@ -300,6 +305,8 @@ namespace ManualCAD
 			return { world_pos + dot(cam_pos - world_pos, n_dir) * n_dir, n_dir };
 		}
 		}
+		Logger::log_error("Camera::get_ray_to: Invalid ProjectionType (this should never happen)!");
+		return Ray{};
 	}
 
 	Camera::Camera() {

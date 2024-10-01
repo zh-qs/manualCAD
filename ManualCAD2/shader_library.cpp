@@ -14,12 +14,14 @@ namespace ManualCAD
 		set.bezier_shader.init("line_vertex_shader.glsl", "bezier_curve_geometry_shader.glsl", "line_fragment_shader.glsl");
 		set.bezier_patch_shader.init("dummy_vertex_shader.glsl", "patch_tess_control_shader.glsl", "bezier_patch_tess_eval_shader.glsl", "patch_remove_diagonal_geometry_shader.glsl", "line_trim_fragment_shader.glsl");
 		set.de_boor_patch_shader.init("dummy_vertex_shader.glsl", "patch_tess_control_shader.glsl", "de_boor_patch_tess_eval_shader.glsl", "patch_remove_diagonal_geometry_shader.glsl", "line_trim_fragment_shader.glsl");
+		set.nurbs_patch_shader.init("join_point_with_weight_vertex_shader.glsl", "patch_weight_tess_control_shader.glsl", "nurbs_patch_tess_eval_shader.glsl", "patch_remove_diagonal_geometry_shader.glsl", "line_trim_fragment_shader.glsl");
 		set.rational_20_param_patch_shader.init("dummy_vertex_shader.glsl", "rational_20_param_patch_tess_control_shader.glsl", "rational_20_param_patch_tess_eval_shader.glsl", "patch_remove_diagonal_geometry_shader.glsl", "line_fragment_shader.glsl");
 		set.simple_shader.init("simple_rect_vertex_shader.glsl", "line_fragment_shader.glsl");
 		set.two_dim_shader.init("2d_vertex_shader.glsl", "wrap_around_parameters_geometry_shader.glsl", "line_fragment_shader.glsl");
 		//set.workpiece_shader.init("workpiece_vertex_shader.glsl", "phong_fragment_shader.glsl");
 		set.workpiece_shader.init("workpiece_vertex_shader_g.glsl", "workpiece_geometry_shader.glsl", "phong_fragment_shader.glsl");
 		set.triangle_shader.init("triangle_vertex_shader.glsl", "phong_fragment_shader.glsl");
+		set.bilinear_form_raycast_shader.init("raycasting_vertex_shader.glsl", "raycasting_fragment_shader.glsl");
 
 		return set;
 	}
@@ -34,12 +36,14 @@ namespace ManualCAD
 		set.bezier_shader.init("line_vertex_shader.glsl", "bezier_curve_geometry_shader.glsl", "line_fragment_shader.glsl");
 		set.bezier_patch_shader.init("dummy_vertex_shader.glsl", "patch_tess_control_shader.glsl", "bezier_patch_offset_tess_eval_shader.glsl", "height_map_fragment_shader.glsl");
 		set.de_boor_patch_shader.init("dummy_vertex_shader.glsl", "patch_tess_control_shader.glsl", "de_boor_patch_offset_tess_eval_shader.glsl", "height_map_fragment_shader.glsl");
+		set.nurbs_patch_shader.init("join_point_with_weight_vertex_shader.glsl", "patch_weight_tess_control_shader.glsl", "nurbs_patch_offset_tess_eval_shader.glsl", "height_map_fragment_shader.glsl");
 		set.rational_20_param_patch_shader.init("dummy_vertex_shader.glsl", "rational_20_param_patch_tess_control_shader.glsl", "rational_20_param_patch_tess_eval_shader.glsl", "height_map_fragment_shader.glsl"); // TODO add offset and make ParametricSurfaceWithSecondDerivative
 		set.simple_shader.init("simple_rect_vertex_shader.glsl", "line_fragment_shader.glsl");
 		set.two_dim_shader.init("2d_vertex_shader.glsl", "wrap_around_parameters_geometry_shader.glsl", "line_fragment_shader.glsl");
 		//set.workpiece_shader.init("workpiece_vertex_shader.glsl", "phong_fragment_shader.glsl");
 		set.workpiece_shader.init("workpiece_vertex_shader_g.glsl", "workpiece_geometry_shader.glsl", "phong_fragment_shader.glsl");
 		set.triangle_shader.init("triangle_vertex_shader.glsl", "phong_fragment_shader.glsl");
+		set.bilinear_form_raycast_shader.init("raycasting_vertex_shader.glsl", "raycasting_fragment_shader.glsl");
 
 		return set;
 	}
@@ -114,5 +118,9 @@ namespace ManualCAD
 		ut_pvm_location = default_set.triangle_shader.get_uniform_location("u_pvm");
 		ut_m_location = default_set.triangle_shader.get_uniform_location("u_m");
 		ut_color_location = default_set.triangle_shader.get_uniform_location("u_color");
+
+		ubfr_color_location = default_set.bilinear_form_raycast_shader.get_uniform_location("u_drawable.color");
+		ubfr_form_location = default_set.bilinear_form_raycast_shader.get_uniform_location("u_drawable.form");
+		ubfr_specular_exponent_location = default_set.bilinear_form_raycast_shader.get_uniform_location("u_specular_exponent");
 	}
 }

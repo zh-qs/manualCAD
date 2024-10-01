@@ -95,6 +95,20 @@ namespace ManualCAD
 		}
 	}
 
+	void build_nurbs_point_list(Object& object, std::vector<Point*>& points, std::vector<float>& weights) {
+		if (ImGui::BeginListBox("Point weights")) {
+			for (int i = 0; i < points.size(); ++i) {
+				//ImGui::Text("%s", points[i].name.c_str());
+				std::string tag = "##" + std::to_string(i);
+				std::string label = points[i]->name + tag;
+
+				object.invalidate_if(ImGui::SliderFloat(label.c_str(), &weights[i], 0.01, 10, NULL, ImGuiSliderFlags_NoInput));
+			}
+
+			ImGui::EndListBox();
+		}
+	}
+
 	void ObjectSettings::build_general_settings(Object& object) {
 		constexpr int INPUT_BUF_SIZE = 100;
 		char input_buf[INPUT_BUF_SIZE];
@@ -320,6 +334,42 @@ namespace ManualCAD
 		}
 	}
 
+	void ObjectSettings::build_bicubic_c2_nurbs_surface_settings(BicubicC2NURBSSurface& surf, ObjectSettingsWindow& parent)
+	{
+		int s_div_x = surf.surf.divisions_x, s_div_y = surf.surf.divisions_y;
+		ImGui::SeparatorText("NURBS C2 surface");
+		if (ImGui::ColorEdit4("Grid color", surf.contour_color.data(), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_AlphaPreview))
+		{
+			surf.surf.contour_color = surf.contour_color;
+		}
+		surf.invalidate_if(ImGui::Checkbox("Grid visible", &surf.contour_visible));
+		surf.invalidate_if(ImGui::Checkbox("Patch visible", &surf.patch_visible));
+
+		bool changed_x = ImGui::InputInt("X divisions", &s_div_x);
+		bool changed_y = ImGui::InputInt("Z divisions", &s_div_y);
+
+		if (changed_x || changed_y)
+		{
+			if (s_div_x > 2 && s_div_x <= 64)
+			{
+				surf.surf.divisions_x = s_div_x;
+				surf.invalidate();
+			}
+			if (s_div_y > 2 && s_div_y <= 64)
+			{
+				surf.surf.divisions_y = s_div_y;
+				surf.invalidate();
+			}
+		}
+		if (ImGui::Button("Select all points"))
+		{
+			//parent.controller.select_all_from<Point, std::vector>(surf.points);
+			parent.controller.select_observing(surf);
+		}
+
+		build_nurbs_point_list(surf, surf.points, surf.weights);
+	}
+
 	void ObjectSettings::build_bicubic_c0_bezier_surface_preview_settings(BicubicC0BezierSurfacePreview& preview, ObjectSettingsWindow& parent)
 	{
 		int patches_x = preview.patches_x, patches_y = preview.patches_y;
@@ -423,6 +473,59 @@ namespace ManualCAD
 			parent.visible = false;
 		}
 	}
+
+	void ObjectSettings::build_bicubic_c2_nurbs_surface_preview_settings(BicubicC2NURBSSurfacePreview& preview, ObjectSettingsWindow& parent)
+	{
+		int patches_x = preview.patches_x, patches_y = preview.patches_y;
+		ImGui::SeparatorText("Bezier C2 patch");
+		bool changed_x = ImGui::InputInt("X patch count", &patches_x);
+		bool changed_y = ImGui::InputInt("Z patch count", &patches_y);
+
+		const int min_patches_x = preview.cylinder ? 3 : 1;
+
+		if ((changed_x || changed_y) && patches_x >= min_patches_x && patches_y > 0)
+		{
+			preview.patches_x = patches_x;
+			preview.patches_y = patches_y;
+			preview.invalidate();
+		}
+
+		if (preview.invalidate_if(ImGui::Checkbox("Cylinder (join edges)", &preview.cylinder))) {
+			if (preview.patches_x < 3)
+				preview.patches_x = 3;
+		}
+
+		if (preview.cylinder)
+		{
+			preview.invalidate_if(ImGui::SliderFloat("Radius", &preview.radius, 0.001f, 10.0f));
+			preview.invalidate_if(ImGui::SliderFloat("Height", &preview.width_y, 0.001f, 10.0f));
+		}
+		else
+		{
+			preview.invalidate_if(ImGui::SliderFloat("Width", &preview.width_x, 0.001f, 10.0f));
+			preview.invalidate_if(ImGui::SliderFloat("Depth", &preview.width_y, 0.001f, 10.0f));
+		}
+
+		if (ImGui::Button("Build"))
+		{
+			parent.controller.unset_preview();
+			parent.visible = false;
+			BicubicC2NURBSSurface* patch;
+			if (preview.cylinder)
+				patch = &BicubicC2NURBSSurface::create_cylinder_and_add(parent.controller, preview.position, preview.patches_x, preview.patches_y, preview.radius, preview.width_y / patches_y);
+			else
+				patch = &BicubicC2NURBSSurface::create_and_add(parent.controller, preview.position, preview.patches_x, preview.patches_y, preview.width_x / patches_x, preview.width_y / patches_y);
+			patch->color = preview.color;
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel"))
+		{
+			parent.controller.unset_preview();
+			parent.visible = false;
+		}
+	}
+
 	void ObjectSettings::build_gregory_20_param_surface_settings(Gregory20ParamSurface& surf, ObjectSettingsWindow& parent)
 	{
 		int s_div_x = surf.surf.divisions_x, s_div_y = surf.surf.divisions_y;
@@ -589,7 +692,7 @@ namespace ManualCAD
 			ImGui::SeparatorText("Cutter");
 			ImGui::Text("Diameter: %.1f mm", program.cutter->get_diameter() * 10.0f);
 			ImGui::Text("Type: %s", program.cutter->get_type());
-			
+
 			if (ImGui::Button("Save"))
 			{
 				std::string filename;
@@ -644,6 +747,35 @@ namespace ManualCAD
 		if (tex_idx > 0)
 		{
 			ImGui::Image((void*)(intptr_t)tex_idx, { 2000, 2000 });
+		}
+	}
+	void ObjectSettings::build_ellipsoid_settings(Ellipsoid& ellipsoid, ObjectSettingsWindow& parent)
+	{
+		ImGui::SeparatorText("Ellipsoid");
+
+		float a = ellipsoid.get_semiaxis(0),
+			b = ellipsoid.get_semiaxis(1),
+			c = ellipsoid.get_semiaxis(2);
+
+		ImGui::Text("Semi-axes lengths:");
+		if (ImGui::SliderFloat("a", &a, 0.0f, 10.0f, NULL, ImGuiSliderFlags_NoInput)) {
+			ellipsoid.set_semiaxes(a, b, c);
+			ellipsoid.raycastable.reset_downsampling();
+		}
+		if (ImGui::SliderFloat("b", &b, 0.0f, 10.0f, NULL, ImGuiSliderFlags_NoInput)) {
+			ellipsoid.set_semiaxes(a, b, c);
+			ellipsoid.raycastable.reset_downsampling();
+		}
+		if (ImGui::SliderFloat("c", &c, 0.0f, 10.0f, NULL, ImGuiSliderFlags_NoInput)) {
+			ellipsoid.set_semiaxes(a, b, c);
+			ellipsoid.raycastable.reset_downsampling();
+		}
+
+		if (ImGui::SliderFloat("Light specular exponent", &ellipsoid.raycastable.specular_exponent, 1.0f, 100.0f, NULL, ImGuiSliderFlags_NoInput)) {
+			ellipsoid.raycastable.reset_downsampling();
+		}
+		if (ImGui::SliderInt("Adaptive downsampling scale", &ellipsoid.raycastable.downsampling_scale, 1, 64, NULL, ImGuiSliderFlags_NoInput)) {
+			ellipsoid.raycastable.reset_downsampling();
 		}
 	}
 }

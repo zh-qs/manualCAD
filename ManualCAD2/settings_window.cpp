@@ -1,10 +1,9 @@
 #include "settings_window.h"
-#include "serializer.h"
+#include "json_serializer.h"
 #include "logger.h"
 #include "system_dialog.h"
 #include <filesystem>
 #include <string>
-#include <Scene/SerializerException.h>
 
 namespace ManualCAD
 {
@@ -25,7 +24,7 @@ namespace ManualCAD
 		if (filename.empty())
 			return;
 		std::string s(filename);
-		Serializer serializer(controller, camera);
+		JSONSerializer serializer(controller, camera);
 		if (clear_workspace)
 			controller.clear_all();
 		controller.set_saved();
@@ -33,7 +32,7 @@ namespace ManualCAD
 		{
 			serializer.deserialize(s);
 		}
-		catch (MG1::SerializerException& e)
+		catch (SerializerException& e)
 		{
 			Logger::log_error("[ERROR] Error deserializing JSON:\n%s\n", e.what());
 			SystemDialog::message_box("Error", "Error deserializing JSON", SystemDialog::ButtonType::Ok, SystemDialog::MessageBoxType::Error);
@@ -56,7 +55,7 @@ namespace ManualCAD
 		if (filename.size() < 4 || filename.substr(filename.size() - 4, 4) != ".json")
 			filename += ".json";
 		std::string s(filename);
-		Serializer serializer(controller, camera);
+		JSONSerializer serializer(controller, camera);
 		serializer.serialize(s);
 		controller.set_saved();
 	}

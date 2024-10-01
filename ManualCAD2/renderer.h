@@ -18,6 +18,7 @@
 #include "workpiece_renderable.h"
 #include "triangle_mesh.h"
 #include "shader_library.h"
+#include "bilinear_form_raycastable.h"
 
 #include <list>
 #include <memory>
@@ -31,12 +32,13 @@ namespace ManualCAD
 {
 	class Renderer {
 		static const int STEREOSCOPY_POVS = 2;
-		FrameBuffer fbo[STEREOSCOPY_POVS];
+		FrameBuffer fbo[STEREOSCOPY_POVS], raycast_fbo;
 		RenderTexture texture[STEREOSCOPY_POVS];
+		GlTexture<GL_RGBA, GL_RGBA32F, true> raycast_texture;
 		VertexArray quad_vao;
 		VertexBuffer quad_screen_vbo;
 		VertexBuffer quad_uvs_vbo;
-		Shader quad_shader;
+		Shader quad_shader, raycast_quad_shader;
 		GLint uq_tex_location[STEREOSCOPY_POVS];
 		GLint uq_lcolor_location, uq_saturation_location;
 
@@ -81,16 +83,19 @@ namespace ManualCAD
 		void render_axes_cursor(const AxesCursor& ac, int width, int height, float thickness = 1.0f);
 		void render_surface_and_bezier_contour(const SurfaceWithBezierContour& surf, const Vector4& color, int width, int height, float thickness = 1.0f);
 		void render_surface_and_de_boor_contour(const SurfaceWithDeBoorContour& surf, const Vector4& color, int width, int height, float thickness = 1.0f);
+		void render_nurbs_and_de_boor_contour(const NURBSWithDeBoorContour& surf, const Vector4& color, int width, int height, float thickness = 1.0f);
 		void render_rational_20_param_surface(const Rational20ParamSurface& surf, const Vector4& color, int width, int height, float thickness = 1.0f);
 		void render_simple_rect(const SimpleRect& rect, int width, int height, float thickness = 1.0f);
 		void render_line(const Line& line, const Vector4& color, int width, int height, float thickness = 1.0f);
 		void render_line_2d(const Line2D& line, const Vector4& color, int width, int height, float thickness = 1.0f);
 		void render_workpiece_renderable(const WorkpieceRenderable& workpiece_renderable, const Vector4& color, int width, int height, float thickness = 1.0f);
 		void render_triangle_mesh(const TriangleMesh& mesh, const Vector4& color, int width, int height, float thickness = 1.0f);
+		void render_bilinear_form_raycastable(const BilinearFormRaycastable& raycastable, const Vector4& color, int width, int height, float thickness = 1.0f);
 		void enable_depth_testing();
 		void disable_depth_testing();
 		void enable_depth_buffer_write();
 		void disable_depth_buffer_write();
+		void set_default_blending_function();
 		Camera& get_camera() { return camera; }
 		void dispose();
 	};

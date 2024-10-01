@@ -2,6 +2,7 @@
 #include "algebra.h"
 #include "vertex_array.h"
 #include "buffer.h"
+#include "transformation.h"
 
 namespace ManualCAD
 {
@@ -31,6 +32,10 @@ namespace ManualCAD
 		inline Matrix4x4& get_model_matrix() { return model; }
 		inline void set_model_matrix(const Matrix4x4& mat) { model = mat; }
 		inline void set_model_matrix(Matrix4x4&& mat) { model = std::move(mat); }
+
+		inline virtual void apply_transformation(const Transformation& trans) { model = trans.get_matrix(); }
+		inline virtual void apply_transformations(const Transformation& trans, const Transformation& combine, const Vector3& rotation_center) { model = trans.get_matrix_combined_with(combine, rotation_center); }
+
 		inline void bind_to_render() const { vao.bind(); }
 		inline void unbind_from_render() const { vao.unbind(); }
 

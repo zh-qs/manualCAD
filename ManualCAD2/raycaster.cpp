@@ -25,7 +25,7 @@ namespace ManualCAD
 	};
 
 	Raycaster::Raycaster()
-		: ellipsoid(0.25f, 0.75f, 0.5f, { 1.0f, 1.0f, 0.0f, 1.0f }), vao(), screen_vbo(), uvs_vbo(), texture(), fbo() {}
+		: ellipsoid(), vao(), screen_vbo(), uvs_vbo(), texture(), fbo() {}
 
 	void Raycaster::init(int initial_downsampling_scale) {
 		downsampling_scale = initial_downsampling_scale;
@@ -64,53 +64,53 @@ namespace ManualCAD
 	}
 
 	void Raycaster::render(int width, int height) {
-		int smallWidth = width / current_downsampling_scale, smallHeight = height / current_downsampling_scale;
+		//int smallWidth = width / current_downsampling_scale, smallHeight = height / current_downsampling_scale;
 
-		auto ellipsoid_form = ellipsoid.get_transformed_form(camera.get_bilinear_form_transformation_matrix());
-		// bind framebuffer and set render viewport
-		fbo.bind();
-		texture.bind();
-		texture.set_size(smallWidth, smallHeight);
-		glViewport(0, 0, smallWidth, smallHeight);
+		//auto ellipsoid_form = ellipsoid.get_transformed_form(camera.get_bilinear_form_transformation_matrix());
+		//// bind framebuffer and set render viewport
+		//fbo.bind();
+		//texture.bind();
+		//texture.set_size(smallWidth, smallHeight);
+		//glViewport(0, 0, smallWidth, smallHeight);
 
-		// clear texture
-		glClearColor(0, 0, 0, 0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		//// clear texture
+		//glClearColor(0, 0, 0, 0);
+		//glClear(GL_COLOR_BUFFER_BIT);
 
-		// send uniform data
-		shader.use();
-		glUniform4f(u_drawable_color_location, ellipsoid.color.x, ellipsoid.color.y, ellipsoid.color.z, ellipsoid.color.w);
-		glUniformMatrix4fv(u_drawable_form_location, 1, GL_FALSE, ellipsoid_form.elem);
-		glUniform2f(u_screen_dims_location, width, height);
-		glUniform1f(u_specular_exponent_location, camera.specular_exponent);
+		//// send uniform data
+		//shader.use();
+		//glUniform4f(u_drawable_color_location, ellipsoid.color.x, ellipsoid.color.y, ellipsoid.color.z, ellipsoid.color.w);
+		//glUniformMatrix4fv(u_drawable_form_location, 1, GL_FALSE, ellipsoid_form.elem);
+		//glUniform2f(u_screen_dims_location, width, height);
+		//glUniform1f(u_specular_exponent_location, camera.specular_exponent);
 
-		// render texture
-		vao.bind();
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		//// render texture
+		//vao.bind();
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		// bind screen framebuffer
-		fbo.unbind();
-		glViewport(0, 0, width, height);
+		//// bind screen framebuffer
+		//fbo.unbind();
+		//glViewport(0, 0, width, height);
 
-		// use shader and send uniform data (texture sampler)
-		quad_shader.use();
-		glActiveTexture(GL_TEXTURE0);
-		texture.bind();
-		glUniform1i(u_texture_location, 0);
+		//// use shader and send uniform data (texture sampler)
+		//quad_shader.use();
+		//glActiveTexture(GL_TEXTURE0);
+		//texture.bind();
+		//glUniform1i(u_texture_location, 0);
 
-		// render screen
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		//// render screen
+		//glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		//// bind our and screen framebuffers
-		//fbo.bind_to_read();
-		//texture.set_as_read();
-		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		////glFramebufferTexture(GL_DRAW_BUFFER, GL_COLOR_ATTACHMENT0, 0, 0);
+		////// bind our and screen framebuffers
+		////fbo.bind_to_read();
+		////texture.set_as_read();
+		////glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		//////glFramebufferTexture(GL_DRAW_BUFFER, GL_COLOR_ATTACHMENT0, 0, 0);
 
-		//glBlitFramebuffer(0, 0, smallWidth, smallHeight, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		////glBlitFramebuffer(0, 0, smallWidth, smallHeight, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		// divide downsampling scale if greater than 1
-		if (current_downsampling_scale > 1) current_downsampling_scale /= 2;
+		//// divide downsampling scale if greater than 1
+		//if (current_downsampling_scale > 1) current_downsampling_scale /= 2;
 	}
 
 	void Raycaster::dispose() {

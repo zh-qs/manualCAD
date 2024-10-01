@@ -150,9 +150,6 @@
     <ClCompile Include="settings_window.cpp">
       <Filter>Pliki źródłowe\gui\windows</Filter>
     </ClCompile>
-    <ClCompile Include="serializer.cpp">
-      <Filter>Pliki źródłowe\io</Filter>
-    </ClCompile>
     <ClCompile Include="..\tinyfiledialogs\tinyfiledialogs.c">
       <Filter>tinyfiledialogs</Filter>
     </ClCompile>
@@ -234,6 +231,18 @@
     <ClCompile Include="curve_path.cpp">
       <Filter>Pliki źródłowe\milling\paths\path_generation</Filter>
     </ClCompile>
+    <ClCompile Include="bilinear_form_raycastable.cpp">
+      <Filter>Pliki źródłowe\drawable</Filter>
+    </ClCompile>
+    <ClCompile Include="bilinear_form_object.cpp">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="ellipsoid.cpp">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="json_serializer.cpp">
+      <Filter>Pliki źródłowe\io</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glApplication.h">
@@ -250,12 +259,6 @@
     </ClInclude>
     <ClInclude Include="buffer.h">
       <Filter>Pliki źródłowe\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="ellipsoid.h">
-      <Filter>Pliki źródłowe\drawable</Filter>
-    </ClInclude>
-    <ClInclude Include="bilinear_form_raycastable.h">
-      <Filter>Pliki źródłowe\drawable</Filter>
     </ClInclude>
     <ClInclude Include="algebra.h">
       <Filter>Pliki źródłowe\maths</Filter>
@@ -458,6 +461,18 @@
     <ClInclude Include="parametric_curve.h">
       <Filter>Pliki źródłowe\drawable\objects</Filter>
     </ClInclude>
+    <ClInclude Include="bilinear_form_object.h">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="ellipsoid.h">
+      <Filter>Pliki źródłowe\drawable\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="bilinear_form_raycastable.h">
+      <Filter>Pliki źródłowe\drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="json_serializer.h">
+      <Filter>Pliki źródłowe\io</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="E:\pw_archiwum\sem8\vcpkg\packages\glfw3_x64-windows\bin\glfw3.dll" />
@@ -551,5 +566,19 @@
     <CopyFileToFolders Include="de_boor_patch_offset_tess_eval_shader.glsl">
       <Filter>Pliki źródłowe\shaders</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="nurbs_patch_offset_tess_eval_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="nurbs_patch_tess_eval_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="join_point_with_weight_vertex_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </None>
+    <None Include="patch_weight_tess_control_shader.glsl">
+      <Filter>Pliki źródłowe\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

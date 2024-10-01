@@ -8,7 +8,7 @@ namespace ManualCAD
 	class Serializer;
 
 	class Camera {
-		friend class Serializer;
+		friend class JSONSerializer;
 
 		Vector3 target;
 		Vector3 direction;
